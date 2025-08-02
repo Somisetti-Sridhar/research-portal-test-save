@@ -1,0 +1,130 @@
+{% extends 'base.html' %}
+
+{% block title %}Admin Dashboard - Research Platform{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-12">
+        <h2>Admin Dashboard</h2>
+        <p class="text-muted">Welcome, {{ user.username }} ({{ user.user_type|title }})</p>
+    </div>
+</div>
+
+<!-- Statistics Cards -->
+<div class="row mt-4">
+    <div class="col-md-3">
+        <div class="card text-center">
+            <div class="card-body">
+                <h3 class="text-primary">{{ total_users }}</h3>
+                <p class="card-text">Total Users</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-center">
+            <div class="card-body">
+                <h3 class="text-success">{{ approved_papers }}</h3>
+                <p class="card-text">Approved Papers</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-center">
+            <div class="card-body">
+                <h3 class="text-warning">{{ pending_count }}</h3>
+                <p class="card-text">Pending Approval</p>
+                <a href="{% url 'papers:pending_approval' %}" class="btn btn-sm btn-warning">Review</a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-center">
+            <div class="card-body">
+                <h3 class="text-info">{{ total_papers }}</h3>
+                <p class="card-text">Total Papers</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Pending Papers Section -->
+{% if pending_count > 0 %}
+<div class="row mt-4">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5>Papers Pending Approval</h5>
+                <a href="{% url 'papers:pending_approval' %}" class="btn btn-primary">View All</a>
+            </div>
+            <div class="card-body">
+                {% for paper in pending_papers|slice:":5" %}
+                    <div class="mb-3 p-3 border rounded">
+                        <h6>{{ paper.title }}</h6>
+                        <p class="text-muted">{{ paper.abstract|truncatechars:150 }}</p>
+                        <small class="text-muted">
+                            Uploaded by {{ paper.uploaded_by.username }} on {{ paper.created_at|date:"M d, Y" }}
+                        </small>
+                        <div class="mt-2">
+                            <a href="{% url 'papers:detail' paper.pk %}" class="btn btn-sm btn-outline-primary">Review</a>
+                            <a href="{% url 'papers:approve' paper.pk %}" class="btn btn-sm btn-success">Approve</a>
+                            <a href="{% url 'papers:reject' paper.pk %}" class="btn btn-sm btn-danger" 
+                               onclick="return confirm('Reject this paper?')">Reject</a>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Recent Activity -->
+<div class="row mt-4">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header">
+                <h5>Recent Papers</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Title</th>
+                                <th>Author</th>
+                                <th>Uploaded By</th>
+                                <th>Status</th>
+                                <th>Date</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for paper in recent_papers %}
+                                <tr>
+                                    <td>{{ paper.title|truncatechars:50 }}</td>
+                                    <td>{{ paper.authors|truncatechars:30 }}</td>
+                                    <td>{{ paper.uploaded_by.username }}</td>
+                                    <td>
+                                        {% if paper.is_approved %}
+                                            <span class="badge bg-success">Approved</span>
+                                        {% else %}
+                                            <span class="badge bg-warning">Pending</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ paper.created_at|date:"M d, Y" }}</td>
+                                    <td>
+                                        <a href="{% url 'papers:detail' paper.pk %}" class="btn btn-sm btn-outline-primary">View</a>
+                                        {% if not paper.is_approved %}
+                                            <a href="{% url 'papers:approve' paper.pk %}" class="btn btn-sm btn-success">Approve</a>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

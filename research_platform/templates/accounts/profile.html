@@ -1,0 +1,79 @@
+{% extends 'base.html' %}
+
+{% block title %}Profile - Research Platform{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-body text-center">
+                {% if profile.avatar %}
+                    <img src="{{ profile.avatar.url }}" class="rounded-circle mb-3" width="150" height="150">
+                {% else %}
+                    <div class="bg-secondary rounded-circle mx-auto mb-3 d-flex align-items-center justify-content-center" style="width: 150px; height: 150px;">
+                        <i class="fas fa-user fa-3x text-white"></i>
+                    </div>
+                {% endif %}
+                <h4>{{ profile.first_name }} {{ profile.last_name }}</h4>
+                <p class="text-muted">{{ user.email }}</p>
+                <span class="badge bg-primary">{{ user.user_type|title }}</span>
+                <div class="mt-3">
+                    <a href="{% url 'accounts:profile_edit' %}" class="btn btn-primary">Edit Profile</a>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h5>Profile Information</h5>
+            </div>
+            <div class="card-body">
+                <div class="row mb-3">
+                    <div class="col-sm-3"><strong>Institution:</strong></div>
+                    <div class="col-sm-9">{{ profile.institution|default:"Not specified" }}</div>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-sm-3"><strong>Research Interests:</strong></div>
+                    <div class="col-sm-9">{{ profile.research_interests|default:"Not specified" }}</div>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-sm-3"><strong>Bio:</strong></div>
+                    <div class="col-sm-9">{{ profile.bio|default:"No bio provided" }}</div>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-sm-3"><strong>Member Since:</strong></div>
+                    <div class="col-sm-9">{{ user.created_at|date:"F d, Y" }}</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card mt-4">
+            <div class="card-header">
+                <h5>Activity Summary</h5>
+            </div>
+            <div class="card-body">
+                <div class="row text-center">
+                    <div class="col-md-3">
+                        <h4>{{ uploaded_papers }}</h4>
+                        <p>Papers Uploaded</p>
+                    </div>
+                    <div class="col-md-3">
+                        <h4>{{ bookmarks_count }}</h4>
+                        <p>Bookmarks</p>
+                    </div>
+                    <div class="col-md-3">
+                        <h4>{{ ratings_count }}</h4>
+                        <p>Ratings Given</p>
+                    </div>
+                    <div class="col-md-3">
+                        <h4>{{ groups_count }}</h4>
+                        <p>Groups Joined</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

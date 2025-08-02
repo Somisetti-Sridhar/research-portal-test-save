@@ -1,0 +1,213 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ group.name }} - Research Platform{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h4>{{ group.name }}</h4>
+                <div>
+                    {% if user.is_authenticated %}
+                        {% if is_member %}
+                            <a href="{% url 'groups:leave' group.pk %}" class="btn btn-outline-danger btn-sm">Leave Group</a>
+                        {% else %}
+                            {% if not group.is_private %}
+                                <a href="{% url 'groups:join' group.pk %}" class="btn btn-primary btn-sm">Join Group</a>
+                            {% endif %}
+                        {% endif %}
+                    {% endif %}
+                </div>
+            </div>
+            <div class="card-body">
+                <p>{{ group.description }}</p>
+                <p><strong>Created by:</strong> {{ group.created_by.username }}</p>
+                <p><strong>Created on:</strong> {{ group.created_at|date:"M d, Y" }}</p>
+                <p><strong>Type:</strong> 
+                    {% if group.is_private %}
+                        <span class="badge bg-warning">Private</span>
+                    {% else %}
+                        <span class="badge bg-success">Public</span>
+                    {% endif %}
+                </p>
+                <p><strong>Members:</strong> {{ members.count }}</p>
+            </div>
+        </div>
+        
+        <!-- Group Papers -->
+        <div class="card mt-4">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5>Group Papers</h5>
+                {% if is_member %}
+                    <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#addPaperModal">
+                        Add Paper
+                    </button>
+                {% endif %}
+            </div>
+            <div class="card-body">
+                {% for group_paper in papers %}
+                    <div class="mb-3">
+                        <h6>
+                            <a href="{% url 'papers:detail' group_paper.paper.pk %}">
+                                {{ group_paper.paper.title }}
+                            </a>
+                        </h6>
+                        <p>{{ group_paper.paper.abstract|truncatechars:150 }}</p>
+                        <small class="text-muted">
+                            Added by {{ group_paper.added_by.username }} on {{ group_paper.added_at|date:"M d, Y" }}
+                        </small>
+                        <div class="mt-2">
+                            <a href="{% url 'chat:paper_chat' group_paper.paper.pk %}" class="btn btn-sm btn-outline-info">
+                                <i class="fas fa-comments"></i> Discuss
+                            </a>
+                        </div>
+                    </div>
+                {% empty %}
+                    <p>No papers in this group yet.</p>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <!-- Members Management -->
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h6>Members ({{ members.count }})</h6>
+                {% if is_member and user_membership.role in 'admin,moderator' %}
+                    <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#inviteMemberModal">
+                        <i class="fas fa-user-plus"></i> Invite
+                    </button>
+                {% endif %}
+            </div>
+            <div class="card-body">
+                {% for member in members %}
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <div>
+                            <span>{{ member.user.username }}</span>
+                            <span class="badge bg-secondary">{{ member.role|title }}</span>
+                        </div>
+                        {% if is_member and user_membership.role == 'admin' and member.user != user %}
+                            <div class="dropdown">
+                                <button class="btn btn-sm btn-outline-secondary dropdown-toggle" data-bs-toggle="dropdown">
+                                    <i class="fas fa-cog"></i>
+                                </button>
+                                <ul class="dropdown-menu">
+                                    <li><a class="dropdown-item" href="#" onclick="updateRole({{ member.user.id }}, 'member')">Make Member</a></li>
+                                    <li><a class="dropdown-item" href="#" onclick="updateRole({{ member.user.id }}, 'moderator')">Make Moderator</a></li>
+                                    <li><a class="dropdown-item" href="#" onclick="updateRole({{ member.user.id }}, 'admin')">Make Admin</a></li>
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li><a class="dropdown-item text-danger" href="{% url 'groups:remove_member' group.pk member.user.id %}" onclick="return confirm('Remove this member?')">Remove</a></li>
+                                </ul>
+                            </div>
+                        {% endif %}
+                    </div>
+                {% endfor %}
+                
+                <div class="mt-3">
+                    <a href="{% url 'groups:members' group.pk %}" class="btn btn-sm btn-outline-primary w-100">
+                        View All Members
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Invite Member Modal -->
+{% if is_member and user_membership.role in 'admin,moderator' %}
+<div class="modal fade" id="inviteMemberModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Invite Member to Group</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="post" action="{% url 'groups:invite_member' group.pk %}">
+                <div class="modal-body">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label class="form-label">Username or Email</label>
+                        <input type="text" name="username_or_email" class="form-control" placeholder="Enter username or email" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Role</label>
+                        <select name="role" class="form-control">
+                            <option value="member">Member</option>
+                            <option value="moderator">Moderator</option>
+                            {% if user_membership.role == 'admin' %}
+                                <option value="admin">Admin</option>
+                            {% endif %}
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Invite Member</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Add Paper Modal -->
+{% if is_member %}
+<div class="modal fade" id="addPaperModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Add Paper to Group</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="post" action="{% url 'groups:add_paper' group.pk %}">
+                <div class="modal-body">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label class="form-label">Select Paper</label>
+                        <select name="paper_id" class="form-control" required>
+                            <option value="">Choose a paper...</option>
+                            {% for paper in user_papers %}
+                                <option value="{{ paper.id }}">{{ paper.title }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Add Paper</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function updateRole(userId, role) {
+    if (confirm('Update user role to ' + role + '?')) {
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = '{% url "groups:update_role" group.pk 0 %}'.replace('0', userId);
+        
+        const csrfToken = document.createElement('input');
+        csrfToken.type = 'hidden';
+        csrfToken.name = 'csrfmiddlewaretoken';
+        csrfToken.value = '{{ csrf_token }}';
+        
+        const roleInput = document.createElement('input');
+        roleInput.type = 'hidden';
+        roleInput.name = 'role';
+        roleInput.value = role;
+        
+        form.appendChild(csrfToken);
+        form.appendChild(roleInput);
+        document.body.appendChild(form);
+        form.submit();
+    }
+}
+</script>
+{% endblock %}

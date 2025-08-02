@@ -1,0 +1,83 @@
+{% extends 'base.html' %}
+
+{% block title %}Bookmarks - Research Platform{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>My Bookmarks</h2>
+    <a href="{% url 'papers:list' %}" class="btn btn-primary">Browse Papers</a>
+</div>
+
+<div class="row">
+    {% for bookmark in bookmarks %}
+        <div class="col-md-6 col-lg-4 mb-4">
+            <div class="card h-100">
+                <div class="card-body">
+                    <h5 class="card-title">
+                        <a href="{% url 'papers:detail' bookmark.paper.pk %}" class="text-decoration-none">
+                            {{ bookmark.paper.title|truncatechars:60 }}
+                        </a>
+                    </h5>
+                    <p class="card-text">{{ bookmark.paper.abstract|truncatechars:120 }}</p>
+                    <p class="card-text">
+                        <small class="text-muted">
+                            By {{ bookmark.paper.authors|truncatechars:50 }}
+                        </small>
+                    </p>
+                    <div class="mb-2">
+                        {% for category in bookmark.paper.categories.all %}
+                            <span class="badge bg-secondary">{{ category.name }}</span>
+                        {% endfor %}
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <small class="text-muted">
+                            Bookmarked: {{ bookmark.created_at|date:"M d, Y" }}
+                        </small>
+                        <a href="{% url 'papers:bookmark' bookmark.paper.pk %}" class="btn btn-outline-danger btn-sm">
+                            <i class="fas fa-bookmark"></i> Remove
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% empty %}
+        <div class="col-12">
+            <div class="text-center">
+                <p>You haven't bookmarked any papers yet.</p>
+                <a href="{% url 'papers:list' %}" class="btn btn-primary">Browse Papers to Bookmark</a>
+            </div>
+        </div>
+    {% endfor %}
+</div>
+
+<!-- Pagination -->
+{% if is_paginated %}
+<nav aria-label="Bookmarks pagination">
+    <ul class="pagination justify-content-center">
+        {% if page_obj.has_previous %}
+            <li class="page-item">
+                <a class="page-link" href="?page={{ page_obj.previous_page_number }}">Previous</a>
+            </li>
+        {% endif %}
+        
+        {% for num in page_obj.paginator.page_range %}
+            {% if page_obj.number == num %}
+                <li class="page-item active">
+                    <span class="page-link">{{ num }}</span>
+                </li>
+            {% else %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ num }}">{{ num }}</a>
+                </li>
+            {% endif %}
+        {% endfor %}
+        
+        {% if page_obj.has_next %}
+            <li class="page-item">
+                <a class="page-link" href="?page={{ page_obj.next_page_number }}">Next</a>
+            </li>
+        {% endif %}
+    </ul>
+</nav>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,112 @@
+{% extends 'base.html' %}
+
+{% block title %}Search Results - Research Platform{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-3">
+        <div class="card">
+            <div class="card-header">
+                <h5>Filters</h5>
+            </div>
+            <div class="card-body">
+                <form method="get">
+                    <input type="hidden" name="q" value="{{ query }}">
+                    <div class="mb-3">
+                        <label class="form-label">Category</label>
+                        <select name="category" class="form-control">
+                            <option value="">All Categories</option>
+                            {% for category in categories %}
+                                <option value="{{ category.id }}" {% if category.id|stringformat:"s" == selected_category %}selected{% endif %}>
+                                    {{ category.name }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Author</label>
+                        <input type="text" name="author" class="form-control" value="{{ author }}">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Year From</label>
+                        <input type="number" name="year_from" class="form-control" value="{{ year_from }}">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Year To</label>
+                        <input type="number" name="year_to" class="form-control" value="{{ year_to }}">
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100">Apply Filters</button>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-9">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h3>Search Results {% if query %}for "{{ query }}"{% endif %}</h3>
+            <p class="text-muted">{{ papers|length }} results found</p>
+        </div>
+        
+        {% for paper in papers %}
+            <div class="card mb-3">
+                <div class="card-body">
+                    <h5 class="card-title">
+                        <a href="{% url 'papers:detail' paper.pk %}" class="text-decoration-none">
+                            {{ paper.title }}
+                        </a>
+                    </h5>
+                    <p class="card-text">{{ paper.abstract|truncatechars:200 }}</p>
+                    <p class="card-text">
+                        <small class="text-muted">
+                            By {{ paper.authors }} | {{ paper.publication_date|date:"Y" }} | 
+                            Views: {{ paper.view_count }} | Downloads: {{ paper.download_count }}
+                        </small>
+                    </p>
+                    <div>
+                        {% for category in paper.categories.all %}
+                            <span class="badge bg-secondary">{{ category.name }}</span>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        {% empty %}
+            <div class="text-center">
+                <p>No papers found matching your search criteria.</p>
+                <a href="{% url 'papers:list' %}" class="btn btn-primary">Browse All Papers</a>
+            </div>
+        {% endfor %}
+        
+        <!-- Pagination -->
+        {% if is_paginated %}
+        <nav aria-label="Search results pagination">
+            <ul class="pagination justify-content-center">
+                {% if page_obj.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?q={{ query }}&category={{ selected_category }}&author={{ author }}&year_from={{ year_from }}&year_to={{ year_to }}&page={{ page_obj.previous_page_number }}">Previous</a>
+                    </li>
+                {% endif %}
+                
+                {% for num in page_obj.paginator.page_range %}
+                    {% if page_obj.number == num %}
+                        <li class="page-item active">
+                            <span class="page-link">{{ num }}</span>
+                        </li>
+                    {% else %}
+                        <li class="page-item">
+                            <a class="page-link" href="?q={{ query }}&category={{ selected_category }}&author={{ author }}&year_from={{ year_from }}&year_to={{ year_to }}&page={{ num }}">{{ num }}</a>
+                        </li>
+                    {% endif %}
+                {% endfor %}
+                
+                {% if page_obj.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?q={{ query }}&category={{ selected_category }}&author={{ author }}&year_from={{ year_from }}&year_to={{ year_to }}&page={{ page_obj.next_page_number }}">Next</a>
+                    </li>
+                {% endif %}
+            </ul>
+        </nav>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+a

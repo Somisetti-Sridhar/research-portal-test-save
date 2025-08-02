@@ -1,0 +1,58 @@
+{% extends 'base.html' %}
+
+{% block title %}Search History - Research Platform{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>Search History</h2>
+    <a href="{% url 'search:search' %}" class="btn btn-primary">New Search</a>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        {% for search in searches %}
+            <div class="d-flex justify-content-between align-items-center py-2 border-bottom">
+                <div>
+                    <a href="{% url 'search:search' %}?q={{ search.query }}" class="text-decoration-none">
+                        {{ search.query }}
+                    </a>
+                </div>
+                <small class="text-muted">{{ search.timestamp|date:"M d, Y H:i" }}</small>
+            </div>
+        {% empty %}
+            <p class="text-center">No search history yet.</p>
+        {% endfor %}
+    </div>
+</div>
+
+<!-- Pagination -->
+{% if is_paginated %}
+<nav aria-label="Search history pagination" class="mt-4">
+    <ul class="pagination justify-content-center">
+        {% if page_obj.has_previous %}
+            <li class="page-item">
+                <a class="page-link" href="?page={{ page_obj.previous_page_number }}">Previous</a>
+            </li>
+        {% endif %}
+        
+        {% for num in page_obj.paginator.page_range %}
+            {% if page_obj.number == num %}
+                <li class="page-item active">
+                    <span class="page-link">{{ num }}</span>
+                </li>
+            {% else %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ num }}">{{ num }}</a>
+                </li>
+            {% endif %}
+        {% endfor %}
+        
+        {% if page_obj.has_next %}
+            <li class="page-item">
+                <a class="page-link" href="?page={{ page_obj.next_page_number }}">Next</a>
+            </li>
+        {% endif %}
+    </ul>
+</nav>
+{% endif %}
+{% endblock %}

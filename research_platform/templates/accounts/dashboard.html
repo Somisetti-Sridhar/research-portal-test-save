@@ -1,0 +1,123 @@
+{% extends 'base.html' %}
+
+{% block title %}Dashboard - Research Platform{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-12">
+        <h2>Welcome back, {{ user.first_name|default:user.username }}!</h2>
+        <p class="text-muted">User Type: <span class="badge bg-primary">{{ user.user_type|title }}</span></p>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-md-3">
+        <div class="card text-center">
+            <div class="card-body">
+                <h5 class="card-title">{{ recent_papers|length }}</h5>
+                <p class="card-text">My Papers</p>
+                <a href="{% url 'papers:my_papers' %}" class="btn btn-primary btn-sm">View All</a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-center">
+            <div class="card-body">
+                <h5 class="card-title">{{ recent_bookmarks|length }}</h5>
+                <p class="card-text">Bookmarks</p>
+                <a href="{% url 'papers:bookmarks' %}" class="btn btn-primary btn-sm">View All</a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-center">
+            <div class="card-body">
+                <h5 class="card-title">{{ recent_ratings|length }}</h5>
+                <p class="card-text">Ratings</p>
+                <a href="{% url 'papers:list' %}" class="btn btn-primary btn-sm">Browse Papers</a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-center">
+            <div class="card-body">
+                <h5 class="card-title">{{ recommendations|length }}</h5>
+                <p class="card-text">Recommendations</p>
+                <a href="#recommendations" class="btn btn-primary btn-sm">View Below</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5>Recent Activity</h5>
+            </div>
+            <div class="card-body">
+                <h6>Recent Papers</h6>
+                {% for paper in recent_papers %}
+                    <div class="mb-2">
+                        <a href="{% url 'papers:detail' paper.pk %}">{{ paper.title|truncatechars:50 }}</a>
+                        <small class="text-muted d-block">{{ paper.created_at|date:"M d, Y" }}</small>
+                    </div>
+                {% empty %}
+                    <p>No papers uploaded yet.</p>
+                {% endfor %}
+                
+                <h6 class="mt-3">Recent Bookmarks</h6>
+                {% for bookmark in recent_bookmarks %}
+                    <div class="mb-2">
+                        <a href="{% url 'papers:detail' bookmark.paper.pk %}">{{ bookmark.paper.title|truncatechars:50 }}</a>
+                        <small class="text-muted d-block">{{ bookmark.created_at|date:"M d, Y" }}</small>
+                    </div>
+                {% empty %}
+                    <p>No bookmarks yet.</p>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 id="recommendations">Recommendations for You</h5>
+            </div>
+            <div class="card-body">
+                {% for rec in recommendations %}
+                    <div class="mb-3">
+                        <a href="{% url 'papers:detail' rec.paper.pk %}" class="text-decoration-none">
+                            <h6>{{ rec.paper.title|truncatechars:60 }}</h6>
+                        </a>
+                        <p class="mb-1">{{ rec.paper.abstract|truncatechars:100 }}</p>
+                        <small class="text-muted">Score: {{ rec.score|floatformat:2 }}</small>
+                        <small class="text-muted d-block">{{ rec.reason }}</small>
+                    </div>
+                {% empty %}
+                    <p>No recommendations available yet. Start bookmarking and rating papers to get personalized recommendations!</p>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+
+{% if user.user_type == 'publisher' or user.user_type == 'moderator' or user.user_type == 'admin' %}
+<div class="row mt-4">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header">
+                <h5>Quick Actions</h5>
+            </div>
+            <div class="card-body">
+                <a href="{% url 'papers:upload' %}" class="btn btn-success me-2">Upload New Paper</a>
+                <a href="{% url 'groups:create' %}" class="btn btn-info me-2">Create Group</a>
+                {% if user.user_type == 'moderator' or user.user_type == 'admin' %}
+                    <a href="{% url 'papers:pending_approval' %}" class="btn btn-warning">Review Pending Papers</a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}

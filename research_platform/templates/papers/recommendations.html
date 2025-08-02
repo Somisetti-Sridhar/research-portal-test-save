@@ -1,0 +1,44 @@
+{% extends 'base.html' %}
+
+{% block title %}Recommendations - Research Platform{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-12">
+        <h2>Recommended Papers for You</h2>
+        <p class="text-muted">Based on your reading history and preferences</p>
+    </div>
+</div>
+
+<div class="row">
+    {% for rec in recommendations %}
+        <div class="col-md-6 col-lg-4 mb-4">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">
+                        <a href="{% url 'papers:detail' rec.paper.pk %}">
+                            {{ rec.paper.title|truncatechars:60 }}
+                        </a>
+                    </h5>
+                    <p class="card-text">{{ rec.paper.abstract|truncatechars:120 }}</p>
+                    <p class="card-text">
+                        <small class="text-muted">
+                            Score: {{ rec.score|floatformat:2 }}<br>
+                            {{ rec.reason }}
+                        </small>
+                    </p>
+                    <a href="{% url 'papers:detail' rec.paper.pk %}" class="btn btn-primary btn-sm">Read Paper</a>
+                </div>
+            </div>
+        </div>
+    {% empty %}
+        <div class="col-12">
+            <div class="text-center">
+                <p>No recommendations available yet.</p>
+                <p>Start bookmarking and rating papers to get personalized recommendations!</p>
+                <a href="{% url 'papers:list' %}" class="btn btn-primary">Browse Papers</a>
+            </div>
+        </div>
+    {% endfor %}
+</div>
+{% endblock %}

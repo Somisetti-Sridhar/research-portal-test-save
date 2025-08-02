@@ -1,0 +1,11 @@
+from django.urls import path
+from . import views
+
+app_name = 'chat'
+
+urlpatterns = [
+    path('paper/<int:paper_id>/', views.ChatRoomView.as_view(), name='paper_chat'),
+    path('room/<int:room_id>/', views.ChatDetailView.as_view(), name='room_detail'),
+    path('ajax/send/<int:room_id>/', views.send_message_ajax, name='send_message_ajax'),
+    path('my-chats/', views.MyChatRoomsView.as_view(), name='my_chats'),
+]

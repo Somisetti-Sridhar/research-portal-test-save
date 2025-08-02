@@ -1,0 +1,36 @@
+{% extends 'base.html' %}
+
+{% block title %}Edit Group - Research Platform{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h3>Edit Group: {{ object.name }}</h3>
+            </div>
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label for="{{ form.name.id_for_label }}" class="form-label">Group Name</label>
+                        {{ form.name }}
+                    </div>
+                    <div class="mb-3">
+                        <label for="{{ form.description.id_for_label }}" class="form-label">Description</label>
+                        {{ form.description }}
+                    </div>
+                    <div class="mb-3 form-check">
+                        {{ form.is_private }}
+                        <label for="{{ form.is_private.id_for_label }}" class="form-check-label">
+                            Private Group (invitation only)
+                        </label>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Update Group</button>
+                    <a href="{% url 'groups:detail' object.pk %}" class="btn btn-secondary">Cancel</a>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

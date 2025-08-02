@@ -1,0 +1,85 @@
+{% extends 'base.html' %}
+
+{% block title %}Home - Research Platform{% endblock %}
+
+{% block content %}
+<div class="jumbotron bg-primary text-white p-5 rounded mb-4">
+    <h1 class="display-4">Welcome to Research Platform</h1>
+    <p class="lead">Discover, share, and collaborate on research papers with AI-powered insights and recommendations.</p>
+    {% if not user.is_authenticated %}
+        <a class="btn btn-light btn-lg" href="{% url 'accounts:register' %}" role="button">Get Started</a>
+    {% else %}
+        <a class="btn btn-light btn-lg" href="{% url 'accounts:dashboard' %}" role="button">Go to Dashboard</a>
+    {% endif %}
+</div>
+
+<div class="row">
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title"><i class="fas fa-search"></i> Discover Papers</h5>
+                <p class="card-text">Search through thousands of research papers with advanced filtering and AI-powered recommendations.</p>
+                <a href="{% url 'papers:list' %}" class="btn btn-primary">Browse Papers</a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title"><i class="fas fa-users"></i> Collaborate</h5>
+                <p class="card-text">Join research groups, participate in discussions, and collaborate with fellow researchers.</p>
+                <a href="{% url 'groups:list' %}" class="btn btn-primary">Join Groups</a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title"><i class="fas fa-upload"></i> Share Research</h5>
+                <p class="card-text">Upload your research papers and share your work with the academic community.</p>
+                {% if user.is_authenticated and user.user_type != 'reader' %}
+                    <a href="{% url 'papers:upload' %}" class="btn btn-primary">Upload Paper</a>
+                {% else %}
+                    <a href="{% url 'accounts:register' %}" class="btn btn-primary">Join as Publisher</a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-md-6">
+        <h3>Recent Papers</h3>
+        <div class="list-group">
+            {% for paper in recent_papers %}
+                <a href="{% url 'papers:detail' paper.pk %}" class="list-group-item list-group-item-action">
+                    <div class="d-flex w-100 justify-content-between">
+                        <h6 class="mb-1">{{ paper.title|truncatechars:60 }}</h6>
+                        <small>{{ paper.created_at|date:"M d, Y" }}</small>
+                    </div>
+                    <p class="mb-1">{{ paper.abstract|truncatechars:100 }}</p>
+                    <small>by {{ paper.authors }}</small>
+                </a>
+            {% empty %}
+                <p>No papers available yet.</p>
+            {% endfor %}
+        </div>
+    </div>
+    <div class="col-md-6">
+        <h3>Popular Categories</h3>
+        <div class="list-group">
+            {% for category in popular_categories %}
+                <a href="{% url 'papers:category_detail' category.pk %}" class="list-group-item list-group-item-action">
+                    <div class="d-flex w-100 justify-content-between">
+                        <h6 class="mb-1">{{ category.name }}</h6>
+                        <span class="badge bg-primary">{{ category.paper_count }}</span>
+                    </div>
+                    <p class="mb-1">{{ category.description|truncatechars:80 }}</p>
+                </a>
+            {% empty %}
+                <p>No categories available yet.</p>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}
