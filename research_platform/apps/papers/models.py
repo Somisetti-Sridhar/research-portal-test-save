@@ -18,7 +18,7 @@ class Paper(models.Model):
     abstract = models.TextField()
     authors = models.TextField()  # JSON field for multiple authors
     publication_date = models.DateField()
-    doi = models.CharField(max_length=100, blank=True, unique=True)
+    doi = models.CharField(max_length=100, blank=True,null=True, unique=True)
     pdf_path = models.FileField(upload_to='papers/pdfs/', blank=True, null=True)
     uploaded_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name='uploaded_papers')
     categories = models.ManyToManyField(Category, through='PaperCategory')
