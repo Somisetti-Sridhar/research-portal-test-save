@@ -1,8 +1,35 @@
 {% extends 'base.html' %}
 
+
 {% block title %}Search Results - Research Platform{% endblock %}
 
+
 {% block content %}
+<style>
+.feature-btn {
+    background: var(--primary-gradient) !important;
+    border: none;
+    color: var(--text-primary) !important;
+    padding: 0.75rem 1.5rem;
+    border-radius: 50px;
+    font-weight: 500;
+    transition: var(--transition);
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    position: relative;
+    overflow: hidden;
+    cursor: pointer;
+    user-select: none;
+    justify-content: center;
+}
+.feature-btn:hover {
+    transform: translateX(5px);
+    box-shadow: 0 10px 25px rgba(102, 126, 234, 0.4);
+    color: var(--text-primary) !important;
+}
+</style>
 <div class="row">
     <div class="col-md-3">
         <div class="card">
@@ -35,7 +62,7 @@
                         <label class="form-label">Year To</label>
                         <input type="number" name="year_to" class="form-control" value="{{ year_to }}">
                     </div>
-                    <button type="submit" class="btn btn-primary w-100">Apply Filters</button>
+                    <button type="submit" class="feature-btn w-100">Apply Filters</button>
                 </form>
             </div>
         </div>
@@ -72,7 +99,7 @@
         {% empty %}
             <div class="text-center">
                 <p>No papers found matching your search criteria.</p>
-                <a href="{% url 'papers:list' %}" class="btn btn-primary">Browse All Papers</a>
+                <a href="{% url 'papers:list' %}" class="feature-btn">Browse All Papers</a>
             </div>
         {% endfor %}
         
@@ -109,4 +136,3 @@
     </div>
 </div>
 {% endblock %}
-a
