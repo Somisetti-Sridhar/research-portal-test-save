@@ -56,6 +56,10 @@ class PaperListView(ListView):
         context['sort_by'] = self.request.GET.get('sort', '-created_at')
         return context
 
+from django.db.models import Q, F
+from .models import Paper, Rating, Citation, Bookmark, PaperView
+from .forms import RatingForm
+
 class PaperDetailView(DetailView):
     model = Paper
     template_name = 'papers/detail.html'
@@ -75,8 +79,11 @@ class PaperDetailView(DetailView):
         context = super().get_context_data(**kwargs)
         paper = self.object
         
-        # Increment view count
-        Paper.objects.filter(id=paper.id).update(view_count=paper.view_count + 1)
+        # Increment view count only once per authenticated user
+        if self.request.user.is_authenticated:
+            if not PaperView.objects.filter(user=self.request.user, paper=paper).exists():
+                Paper.objects.filter(id=paper.id).update(view_count=F('view_count') + 1)
+                PaperView.objects.create(user=self.request.user, paper=paper)
         
         # Get related data
         context['ratings'] = Rating.objects.filter(paper=paper).select_related('user')
@@ -89,6 +96,7 @@ class PaperDetailView(DetailView):
             context['rating_form'] = RatingForm()
         
         return context
+
 
 class PaperUploadView(LoginRequiredMixin, CreateView):
     model = Paper

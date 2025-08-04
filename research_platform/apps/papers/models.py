@@ -94,3 +94,12 @@ class ReadingProgress(models.Model):
     class Meta:
         db_table = 'reading_progress'
         unique_together = ['user', 'paper']
+
+class PaperView(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    paper = models.ForeignKey(Paper, on_delete=models.CASCADE)
+    viewed_at = models.DateTimeField(default=timezone.now)
+
+    class Meta:
+        db_table = 'paper_views'
+        unique_together = ['user', 'paper']
