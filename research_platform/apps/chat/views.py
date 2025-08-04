@@ -9,6 +9,7 @@ from django.contrib import messages
 from django.db import models
 from .models import ChatRoom, ChatMessage
 from apps.papers.models import Paper
+from apps.groups.models import Group
 import json
 
 class ChatRoomView(LoginRequiredMixin, TemplateView):
@@ -30,7 +31,7 @@ class ChatRoomView(LoginRequiredMixin, TemplateView):
         # Get only the last 3 messages for this room
         last_three = ChatMessage.objects.filter(room=chat_room) \
                                         .select_related('user') \
-                                        .order_by('-timestamp')[:3]
+                                        .order_by('-timestamp')
         # Reverse so oldest of the 3 appears first
         messages = list(reversed(last_three))
         
@@ -174,3 +175,45 @@ class MyChatRoomsView(LoginRequiredMixin, ListView):
             models.Q(created_by=self.request.user) |
             models.Q(messages__user=self.request.user)
         ).distinct().order_by('-created_at')
+
+class GroupChatRoomView(ChatRoomView):
+    template_name = 'chat/group_room.html'
+
+    def get_context_data(self, **kwargs):
+        context = super(TemplateView, self).get_context_data(**kwargs)
+        group_id = kwargs['group_id']
+        
+        group = get_object_or_404(Group, pk=group_id)
+        chat_room, created = ChatRoom.objects.get_or_create(
+            group=group,
+            defaults={'created_by': self.request.user}
+        )
+        
+        last_three = ChatMessage.objects.filter(room=chat_room) \
+                                        .select_related('user') \
+                                        .order_by('-timestamp')
+        messages = list(reversed(last_three))
+        
+        context['group'] = group
+        context['chat_room'] = chat_room
+        context['messages'] = messages
+        return context
+
+    def post(self, request, group_id):
+        group = get_object_or_404(Group, pk=group_id)
+        chat_room, created = ChatRoom.objects.get_or_create(
+            group=group,
+            defaults={'created_by': request.user}
+        )
+        
+        message_text = request.POST.get('message', '').strip()
+        if message_text:
+            ChatMessage.objects.create(
+                room=chat_room,
+                user=request.user,
+                message=message_text
+            )
+            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                return JsonResponse({'status': 'success', 'message': 'Message sent'})
+        
+        return redirect('chat:group_chat', group_id=group_id)

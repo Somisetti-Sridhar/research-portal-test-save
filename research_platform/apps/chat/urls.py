@@ -8,4 +8,8 @@ urlpatterns = [
     path('room/<int:room_id>/', views.ChatDetailView.as_view(), name='room_detail'),
     path('ajax/send/<int:room_id>/', views.send_message_ajax, name='send_message_ajax'),
     path('my-chats/', views.MyChatRoomsView.as_view(), name='my_chats'),
+    path('group/<int:group_id>/', views.GroupChatRoomView.as_view(), name='group_chat'), 
+    path('room/<int:room_id>/', views.ChatDetailView.as_view(), name='room_detail'),
+    path('ajax/send/<int:room_id>/', views.send_message_ajax, name='send_message_ajax'),
+    path('my-chats/', views.MyChatRoomsView.as_view(), name='my_chats'),
 ]

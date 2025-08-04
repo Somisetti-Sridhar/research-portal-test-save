@@ -34,6 +34,11 @@
                 <p><strong>Members:</strong> {{ members.count }}</p>
             </div>
         </div>
+        <div class="mt-3">
+            <a href="{% url 'chat:group_chat' group.pk %}" class="btn btn-outline-info btn-sm">
+                <i class="fas fa-comments"></i> Group Chat
+            </a>
+        </div>
         
         <!-- Group Papers -->
         <div class="card mt-4">
