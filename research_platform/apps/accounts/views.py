@@ -138,7 +138,7 @@ class AdminDashboardView(LoginRequiredMixin, TemplateView):
     
     def dispatch(self, request, *args, **kwargs):
         if request.user.user_type not in ['admin']:
-            messages.error(request, 'Access denied. Admin/Moderator privileges required.')
+            messages.error(request, 'Access denied. Admin privileges required.')
             return redirect('accounts:dashboard')
         return super().dispatch(request, *args, **kwargs)
     
