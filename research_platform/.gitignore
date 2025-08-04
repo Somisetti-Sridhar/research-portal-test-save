@@ -6,6 +6,6 @@ __pycache__/
 # Virtual environment
 venv/
 media/papers/pdfs/*
-apps/papers/migrations/*
+
 # Django
 *.log
