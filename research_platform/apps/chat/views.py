@@ -27,8 +27,12 @@ class ChatRoomView(LoginRequiredMixin, TemplateView):
             defaults={'created_by': self.request.user}
         )
         
-        # Get all messages for this room
-        messages = ChatMessage.objects.filter(room=chat_room).select_related('user').order_by('timestamp')
+        # Get only the last 3 messages for this room
+        last_three = ChatMessage.objects.filter(room=chat_room) \
+                                        .select_related('user') \
+                                        .order_by('-timestamp')[:3]
+        # Reverse so oldest of the 3 appears first
+        messages = list(reversed(last_three))
         
         context['paper'] = paper
         context['chat_room'] = chat_room

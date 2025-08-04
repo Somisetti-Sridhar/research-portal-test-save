@@ -10,6 +10,7 @@ from django.core.paginator import Paginator
 from .models import Paper, Category, Bookmark, Rating, Citation
 from .forms import PaperUploadForm, PaperEditForm, RatingForm
 from apps.accounts.permissions import IsPublisherOrAbove, IsModeratorOrAdmin
+from django.views.generic import CreateView
 
 class PaperListView(ListView):
     model = Paper
@@ -385,13 +386,7 @@ def download_paper(request, pk):
         messages.error(request, 'No PDF file available for this paper.')
         return redirect('papers:detail', pk=pk)
 
-# apps/papers/views.py
-from django.contrib.auth.mixins import LoginRequiredMixin
-from django.views.generic import CreateView
-from django.urls import reverse_lazy
-from django.contrib import messages
-from .models import Paper
-from .forms import PaperUploadForm
+
 
 
 class PaperUploadView(LoginRequiredMixin, CreateView):
