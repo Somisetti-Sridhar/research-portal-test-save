@@ -13,7 +13,7 @@ class UserRegistrationForm(UserCreationForm):
     institution = forms.CharField(max_length=200, required=False, widget=forms.TextInput(attrs={'class': 'form-control'}))
     research_interests = forms.CharField(required=False, widget=forms.Textarea(attrs={'class': 'form-control', 'rows': 3}))
     user_type = forms.ChoiceField(choices=User.USER_TYPES, widget=forms.Select(attrs={'class': 'form-control'}))
-    
+
     class Meta:
         model = User
         fields = ('username', 'email', 'first_name', 'last_name', 'user_type', 'password1', 'password2')
@@ -22,6 +22,10 @@ class UserRegistrationForm(UserCreationForm):
             'password1': forms.PasswordInput(attrs={'class': 'form-control'}),
             'password2': forms.PasswordInput(attrs={'class': 'form-control'}),
         }
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['user_type'].choices = [c for c in User.USER_TYPES if c[0] in ('publisher', 'reader')]
+
 
 class UserProfileForm(forms.ModelForm):
     class Meta:
