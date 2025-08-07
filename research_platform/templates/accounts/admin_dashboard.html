@@ -47,6 +47,15 @@
     </div>
 </div>
 
+<div class="row mt-3 mb-3">
+    <div class="col">
+        <a href="{% url 'papers:admin_paper_manage' %}" class="btn btn-outline-secondary">
+            Manage All Papers
+        </a>
+    </div>
+</div>
+
+
 <!-- Pending Papers Section -->
 {% if pending_count > 0 %}
 <div class="row mt-4">

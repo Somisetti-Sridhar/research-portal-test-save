@@ -20,4 +20,6 @@ urlpatterns = [
     path('<int:pk>/approve/', views.approve_paper, name='approve'),
     path('<int:pk>/reject/', views.reject_paper, name='reject'),
     path('recommendations/', views.get_recommendations, name='recommendations'),
+    path('admin-manage/', views.AdminPaperListView.as_view(), name='admin_paper_manage'),
+
 ]

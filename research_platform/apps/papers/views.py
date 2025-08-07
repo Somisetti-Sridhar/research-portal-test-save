@@ -425,3 +425,32 @@ class PaperUploadView(LoginRequiredMixin, CreateView):
             + ("" if paper.is_approved else "  It will be visible after moderator approval.")
         )
         return super().form_valid(form)
+
+
+# new feature --permission for admin to delete papers
+from django.contrib.auth.mixins import UserPassesTestMixin
+
+class AdminPaperListView(LoginRequiredMixin, UserPassesTestMixin, ListView):
+    model = Paper
+    template_name = 'papers/admin_paper_list.html'
+    context_object_name = 'papers'
+    paginate_by = 20
+
+    def test_func(self):
+        return self.request.user.user_type == 'admin'
+
+    def get_queryset(self):
+        queryset = Paper.objects.all().select_related('uploaded_by')
+        search_query = self.request.GET.get('search', '')
+        if search_query:
+            queryset = queryset.filter(
+                Q(title__icontains=search_query) |
+                Q(abstract__icontains=search_query) |
+                Q(authors__icontains=search_query)
+            )
+        return queryset.order_by('-created_at')
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['search_query'] = self.request.GET.get('search', '')
+        return context
