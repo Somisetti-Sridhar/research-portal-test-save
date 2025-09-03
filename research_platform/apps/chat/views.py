@@ -217,3 +217,9 @@ class GroupChatRoomView(ChatRoomView):
                 return JsonResponse({'status': 'success', 'message': 'Message sent'})
         
         return redirect('chat:group_chat', group_id=group_id)
+    
+from django.shortcuts import render
+
+def errorView(request):
+    """Custom 500 error page view"""
+    return render(request, "500.html", status=500)
