@@ -502,9 +502,62 @@
             display: flex;
             flex-direction: column;
         }
+        /* Beta Notice Overlay */
+        #beta-notice {
+            position: fixed;
+            inset: 0;
+            display: grid;
+            place-items: center;
+            background: #f6f7f9;
+            color: #333;
+            z-index: 9999;
+            transition: opacity 1s ease, visibility 1s ease;
+        }
+        #beta-notice .badge {
+        background: #fff;
+        border: 1px solid #e2e8f0;
+        border-radius: 12px;
+        padding: 24px 32px;
+        box-shadow: 0 8px 24px rgba(0,0,0,0.06);
+        font-size: 1.25rem;
+        font-weight: 600;
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        }
+        #beta-notice .label {
+        padding: 2px 10px;
+        border-radius: 999px;
+        background: #fde68a;
+        color: #8a5a00;
+        font-size: 0.85rem;
+        font-weight: 700;
+        line-height: 1.6;
+        }
+        #beta-notice.fade-out {
+        opacity: 0;
+        visibility: hidden;
+        } 
+        @media (prefers-color-scheme: dark) {
+        #beta-notice { background: #0b0d12; color: #e6e6e6; }
+        #beta-notice .badge { background: #111826; border-color: #273244; box-shadow: none; }
+        #beta-notice .label { background: #8a5a00; color: #fff7cc; }
+        }
+
     </style>
 </head>
 <body>
+    <!-- Beta Notice Overlay -->
+    <div id="beta-notice">
+        <div class="badge">
+            <span class="label">BETA</span>
+            This is a beta version of the Research Platform. We are still testing features and improving performance.
+            <br>
+            This is a test version. If your content is plagiarised or used, report the issue to us immediately at 
+            <a href="mailto:seraphyl@orravyn.cloud">seraphyl@orravyn.cloud</a> so that we can remove the content.
+        </div>
+    </div>
+
     <div class="page-wrapper">
         <!-- Animated Particles -->
         <div class="particles" id="particles"></div>
@@ -628,7 +681,7 @@
             <footer>
                 <div class="container">
                     <p>&copy; 2025 Research Platform. Pioneering the future of academic research.</p>
-                    <p>Developed as capstone by Sridhar Somisetti, Sai Ram Maruri, Ram Charan Barma </p>
+                    <p>Developed as capstone by Sridhar Somisetti, Sai Rama Linga Reddy Maruri, Ram Charan Barma </p>
                 </div>
             </footer>
         </div>
@@ -776,6 +829,15 @@
             }
         });
     </script>
+    <script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const betaNotice = document.getElementById("beta-notice");
+        setTimeout(() => {
+            betaNotice.classList.add("fade-out");
+        }, 10000); // shows for 10 seconds
+    });
+    </script>
+
     
     {% block extra_js %}{% endblock %}
 </body>
