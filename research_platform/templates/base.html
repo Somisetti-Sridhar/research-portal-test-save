@@ -502,53 +502,73 @@
             display: flex;
             flex-direction: column;
         }
-        /* Beta Notice Overlay */
-        #beta-notice {
-            position: fixed;
-            inset: 0;
-            display: grid;
-            place-items: center;
-            background: #f6f7f9;
-            color: #333;
-            z-index: 9999;
-            transition: opacity 1s ease, visibility 1s ease;
-        }
-        #beta-notice .badge {
-        background: #fff;
-        border: 1px solid #e2e8f0;
-        border-radius: 12px;
-        padding: 24px 32px;
-        box-shadow: 0 8px 24px rgba(0,0,0,0.06);
-        font-size: 1.25rem;
-        font-weight: 600;
-        display: inline-flex;
-        align-items: center;
-        gap: 10px;
-        }
-        #beta-notice .label {
-        padding: 2px 10px;
-        border-radius: 999px;
-        background: #fde68a;
-        color: #8a5a00;
-        font-size: 0.85rem;
-        font-weight: 700;
-        line-height: 1.6;
-        }
-        #beta-notice.fade-out {
-        opacity: 0;
-        visibility: hidden;
-        } 
-        @media (prefers-color-scheme: dark) {
-        #beta-notice { background: #0b0d12; color: #e6e6e6; }
-        #beta-notice .badge { background: #111826; border-color: #273244; box-shadow: none; }
-        #beta-notice .label { background: #8a5a00; color: #fff7cc; }
-        }
+        /* Container: centers content */
+/* Container: centers content */
+#beta-notice {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+    opacity: 1;
+    transition: opacity 1s ease, visibility 1s ease;
+    pointer-events: none; /* container itself doesn't block clicks */
+}
+
+/* Badge box: auto scales based on content */
+#beta-notice .badge {
+    background: #fff;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 20px 30px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.06);
+    display: inline-flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    text-align: center;
+    font-size: 1rem;
+    font-weight: 600;
+    max-width: 90vw;       /* scale with viewport width */
+    max-height: 90vh;      /* prevent overflow vertically */
+    overflow: auto;        /* scroll if content too long */
+    pointer-events: auto;  
+    word-wrap: break-word;
+    box-sizing: border-box;
+}
+
+/* Label inside the box */
+#beta-notice .label {
+    padding: 2px 10px;
+    border-radius: 999px;
+    background: #fde68a;
+    color: #8a5a00;
+    font-size: 0.85rem;
+    font-weight: 700;
+    line-height: 1.6;
+}
+
+/* Fade out */
+#beta-notice.fade-out {
+    opacity: 0;
+    visibility: hidden;
+}
+
+/* Dark mode */
+@media (prefers-color-scheme: dark) {
+    #beta-notice .badge { background: #111826; border-color: #273244; box-shadow: none; }
+    #beta-notice .label { background: #8a5a00; color: #fff7cc; }
+}
+
 
     </style>
 </head>
 <body>
     <!-- Beta Notice Overlay -->
-    <div id="beta-notice">
+    <div id="beta-notice" style="display: none;">
         <div class="badge">
             <span class="label">BETA</span>
             This is a beta version of the Research Platform. We are still testing features and improving performance.
@@ -557,6 +577,7 @@
             <a href="mailto:seraphyl@orravyn.cloud">support@orravyn.cloud</a> so that we can remove the content.
         </div>
     </div>
+
 
     <div class="page-wrapper">
         <!-- Animated Particles -->
@@ -832,11 +853,29 @@
     <script>
     document.addEventListener("DOMContentLoaded", function () {
         const betaNotice = document.getElementById("beta-notice");
-        setTimeout(() => {
-            betaNotice.classList.add("fade-out");
-        }, 1000); // shows for 2.5 seconds
+
+        if (!sessionStorage.getItem("betaNoticeShown") && betaNotice) {
+        // Show the notice
+            betaNotice.style.display = "block";
+
+        // After 2.5 seconds, fade it out smoothly
+            setTimeout(() => {
+                betaNotice.style.opacity = "0"; // start fade
+            // After transition, remove from DOM
+                setTimeout(() => betaNotice.remove(), 1000); // 1s matches CSS transition
+            }, 3500);
+
+        // Mark as shown for this session
+            sessionStorage.setItem("betaNoticeShown", "true");
+        } else if (betaNotice) {
+        // Remove it immediately if already shown
+            betaNotice.remove();
+        }
     });
     </script>
+
+
+
 
     
     {% block extra_js %}{% endblock %}
