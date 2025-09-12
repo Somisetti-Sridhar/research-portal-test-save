@@ -3,18 +3,230 @@
 {% block title %}{{ group.name }} - Research Platform{% endblock %}
 
 {% block content %}
+<style>
+    .feature-btn {
+        background: var(--primary-gradient) !important;
+        border: none;
+        color: var(--text-primary) !important;
+        padding: 0.5rem 1.25rem;
+        border-radius: 50px;
+        font-weight: 600;
+        font-size: 0.9rem;
+        transition: var(--transition);
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        cursor: pointer;
+        user-select: none;
+        justify-content: center;
+        box-shadow: var(--shadow-glass);
+    }
+    .feature-btn:hover {
+        box-shadow: 0 12px 28px rgba(102, 126, 234, 0.45);
+        color: var(--text-primary) !important;
+    }
+
+    .glossy-card {
+        background: var(--glass-bg);
+        backdrop-filter: blur(10px);
+        border: 1px solid var(--glass-border);
+        border-radius: var(--border-radius);
+        box-shadow: var(--shadow-glass);
+        color: var(--text-primary);
+        transition: var(--transition);
+    }
+
+    .card-header.d-flex {
+        background: var(--glass-bg);
+        border-bottom: 1px solid var(--glass-border);
+        padding: 1rem 1.5rem;
+        border-radius: var(--border-radius) var(--border-radius) 0 0;
+    }
+
+    h4 {
+        user-select: none;
+        background: var(--primary-gradient);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        font-weight: 700;
+        font-size: 1.5rem;
+        margin: 0;
+    }
+
+    h5, h6 {
+        font-weight: 600;
+        color: var(--text-primary);
+    }
+
+    p {
+        color: var(--text-secondary);
+    }
+
+    strong {
+        color: var(--text-primary);
+        font-weight: 600;
+    }
+
+    .badge.bg-warning {
+        background: var(--accent-color);
+        color: var(--text-primary);
+        border-radius: 50px;
+        padding: 0.25rem 0.75rem;
+        user-select: none;
+        font-weight: 600;
+        font-size: 0.8rem;
+    }
+
+    .badge.bg-success {
+        background: var(--secondary-gradient);
+        color: var(--text-primary);
+        border-radius: 50px;
+        padding: 0.25rem 0.75rem;
+        user-select: none;
+        font-weight: 600;
+        font-size: 0.8rem;
+    }
+
+    .badge.bg-secondary {
+        background-color: rgba(255, 255, 255, 0.15);
+        color: var(--text-primary);
+        border-radius: 50px;
+        padding: 0.25rem 0.75rem;
+        font-weight: 600;
+        user-select: none;
+        font-size: 0.8rem;
+    }
+
+    .btn-outline-info, .btn-outline-primary, .btn-outline-danger, .btn-outline-secondary {
+        background: var(--glass-bg);
+        border: 1.5px solid var(--glass-border);
+        color: var(--text-primary);
+        border-radius: var(--border-radius);
+        font-weight: 600;
+        font-size: 0.9rem;
+        transition: var(--transition);
+        box-shadow: none;
+        padding: 0.4rem 1rem;
+    }
+
+    .btn-outline-info:hover {
+        background: var(--primary-gradient);
+        color: var(--text-primary);
+        border-color: var(--primary-gradient);
+        box-shadow: 0 12px 28px rgba(102, 126, 234, 0.45);
+    }
+
+    .btn-outline-primary:hover {
+        background: var(--primary-gradient);
+        color: var(--text-primary);
+        border-color: var(--primary-gradient);
+        box-shadow: 0 12px 28px rgba(102, 126, 234, 0.45);
+    }
+
+    .btn-outline-danger:hover {
+        background: var(--accent-color);
+        color: var(--text-primary);
+        border-color: var(--accent-color);
+        box-shadow: 0 12px 28px rgba(245, 87, 108, 0.45);
+    }
+
+    .btn-outline-secondary:hover {
+        background: var(--secondary-gradient);
+        color: var(--text-primary);
+        border-color: var(--secondary-gradient);
+        box-shadow: 0 12px 28px rgba(102, 126, 234, 0.45);
+    }
+
+    /* Dropdown menu */
+    .dropdown-menu {
+        background: var(--glass-bg);
+        backdrop-filter: blur(10px);
+        border: 1px solid var(--glass-border);
+        border-radius: var(--border-radius);
+        box-shadow: var(--shadow-glass);
+        min-width: 12rem;
+    }
+
+    .dropdown-item {
+        color: var(--text-primary);
+        font-weight: 500;
+        transition: var(--transition);
+    }
+
+    .dropdown-item:hover, .dropdown-item:focus {
+        background: var(--primary-gradient);
+        color: var(--text-primary);
+    }
+
+    .dropdown-divider {
+        border-color: var(--glass-border);
+    }
+
+    .text-muted {
+        color: var(--text-secondary) !important;
+    }
+
+    /* Modal overrides for consistency */
+    .modal-content {
+        background: var(--glass-bg);
+        border-radius: var(--border-radius);
+        color: var(--text-primary);
+        box-shadow: var(--shadow-glass);
+        border: 1px solid var(--glass-border);
+    }
+
+    .modal-header, .modal-footer {
+        border-color: var(--glass-border);
+    }
+
+    .modal-title {
+        font-weight: 700;
+        background: var(--primary-gradient);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+
+    label.form-label {
+        font-weight: 600;
+        color: var(--text-primary);
+    }
+
+    input.form-control, select.form-control {
+        background: var(--glass-bg);
+        border: 1.5px solid var(--glass-border);
+        color: var(--text-primary);
+        border-radius: var(--border-radius);
+        backdrop-filter: blur(12px);
+        font-weight: 500;
+        font-size: 1rem;
+        padding: 0.5rem 0.75rem;
+        box-shadow: none;
+        transition: var(--transition);
+    }
+
+    input.form-control:focus, select.form-control:focus {
+        border-color: var(--primary-gradient);
+        box-shadow: 0 0 8px rgba(102, 126, 234, 0.6);
+        outline: none;
+        background: var(--glass-bg);
+        color: var(--text-primary);
+    }
+</style>
+
 <div class="row">
     <div class="col-md-8">
-        <div class="card">
+        <div class="card glossy-card">
             <div class="card-header d-flex justify-content-between align-items-center">
                 <h4>{{ group.name }}</h4>
                 <div>
                     {% if user.is_authenticated %}
                         {% if is_member %}
-                            <a href="{% url 'groups:leave' group.pk %}" class="btn btn-outline-danger btn-sm">Leave Group</a>
+                            <a href="{% url 'groups:leave' group.pk %}" class="btn btn-outline-danger btn-sm feature-btn">Leave Group</a>
                         {% else %}
                             {% if not group.is_private %}
-                                <a href="{% url 'groups:join' group.pk %}" class="btn btn-primary btn-sm">Join Group</a>
+                                <a href="{% url 'groups:join' group.pk %}" class="btn btn-primary btn-sm feature-btn">Join Group</a>
                             {% endif %}
                         {% endif %}
                     {% endif %}
@@ -24,7 +236,7 @@
                 <p>{{ group.description }}</p>
                 <p><strong>Created by:</strong> {{ group.created_by.username }}</p>
                 <p><strong>Created on:</strong> {{ group.created_at|date:"M d, Y" }}</p>
-                <p><strong>Type:</strong> 
+                <p><strong>Type:</strong>
                     {% if group.is_private %}
                         <span class="badge bg-warning">Private</span>
                     {% else %}
@@ -35,17 +247,17 @@
             </div>
         </div>
         <div class="mt-3">
-            <a href="{% url 'chat:group_chat' group.pk %}" class="btn btn-outline-info btn-sm">
+            <a href="{% url 'chat:group_chat' group.pk %}" class="btn btn-outline-info btn-sm feature-btn">
                 <i class="fas fa-comments"></i> Group Chat
             </a>
         </div>
-        
+
         <!-- Group Papers -->
-        <div class="card mt-4">
+        <div class="card glossy-card mt-4">
             <div class="card-header d-flex justify-content-between align-items-center">
                 <h5>Group Papers</h5>
                 {% if is_member %}
-                    <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#addPaperModal">
+                    <button class="btn btn-primary btn-sm feature-btn" data-bs-toggle="modal" data-bs-target="#addPaperModal">
                         Add Paper
                     </button>
                 {% endif %}
@@ -53,17 +265,11 @@
             <div class="card-body">
                 {% for group_paper in papers %}
                     <div class="mb-3">
-                        <h6>
-                            <a href="{% url 'papers:detail' group_paper.paper.pk %}">
-                                {{ group_paper.paper.title }}
-                            </a>
-                        </h6>
+                        <h6><a href="{% url 'papers:detail' group_paper.paper.pk %}">{{ group_paper.paper.title }}</a></h6>
                         <p>{{ group_paper.paper.abstract|truncatechars:150 }}</p>
-                        <small class="text-muted">
-                            Added by {{ group_paper.added_by.username }} on {{ group_paper.added_at|date:"M d, Y" }}
-                        </small>
+                        <small class="text-muted">Added by {{ group_paper.added_by.username }} on {{ group_paper.added_at|date:"M d, Y" }}</small>
                         <div class="mt-2">
-                            <a href="{% url 'chat:paper_chat' group_paper.paper.pk %}" class="btn btn-sm btn-outline-info">
+                            <a href="{% url 'chat:paper_chat' group_paper.paper.pk %}" class="btn btn-sm btn-outline-info feature-btn">
                                 <i class="fas fa-comments"></i> Discuss
                             </a>
                         </div>
@@ -74,14 +280,14 @@
             </div>
         </div>
     </div>
-    
+
     <div class="col-md-4">
         <!-- Members Management -->
-        <div class="card">
+        <div class="card glossy-card">
             <div class="card-header d-flex justify-content-between align-items-center">
                 <h6>Members ({{ members.count }})</h6>
                 {% if is_member and user_membership.role in 'admin,moderator' %}
-                    <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#inviteMemberModal">
+                    <button class="btn btn-sm btn-primary feature-btn" data-bs-toggle="modal" data-bs-target="#inviteMemberModal">
                         <i class="fas fa-user-plus"></i> Invite
                     </button>
                 {% endif %}
@@ -95,7 +301,7 @@
                         </div>
                         {% if is_member and user_membership.role == 'admin' and member.user != user %}
                             <div class="dropdown">
-                                <button class="btn btn-sm btn-outline-secondary dropdown-toggle" data-bs-toggle="dropdown">
+                                <button class="btn btn-sm btn-outline-secondary dropdown-toggle feature-btn" data-bs-toggle="dropdown" aria-expanded="false">
                                     <i class="fas fa-cog"></i>
                                 </button>
                                 <ul class="dropdown-menu">
@@ -109,9 +315,9 @@
                         {% endif %}
                     </div>
                 {% endfor %}
-                
+
                 <div class="mt-3">
-                    <a href="{% url 'groups:members' group.pk %}" class="btn btn-sm btn-outline-primary w-100">
+                    <a href="{% url 'groups:members' group.pk %}" class="btn btn-sm btn-outline-primary w-100 feature-btn">
                         View All Members
                     </a>
                 </div>
@@ -120,25 +326,26 @@
     </div>
 </div>
 
+
 <!-- Invite Member Modal -->
 {% if is_member and user_membership.role in 'admin,moderator' %}
-<div class="modal fade" id="inviteMemberModal" tabindex="-1">
+<div class="modal fade" id="inviteMemberModal" tabindex="-1" aria-labelledby="inviteMemberModalLabel" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title">Invite Member to Group</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                <h5 class="modal-title" id="inviteMemberModalLabel">Invite Member to Group</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <form method="post" action="{% url 'groups:invite_member' group.pk %}">
                 <div class="modal-body">
                     {% csrf_token %}
                     <div class="mb-3">
-                        <label class="form-label">Username or Email</label>
-                        <input type="text" name="username_or_email" class="form-control" placeholder="Enter username or email" required>
+                        <label for="username_or_email" class="form-label">Username or Email</label>
+                        <input type="text" name="username_or_email" id="username_or_email" class="form-control" placeholder="Enter username or email" required>
                     </div>
                     <div class="mb-3">
-                        <label class="form-label">Role</label>
-                        <select name="role" class="form-control">
+                        <label for="roleSelect" class="form-label">Role</label>
+                        <select name="role" id="roleSelect" class="form-control">
                             <option value="member">Member</option>
                             <option value="moderator">Moderator</option>
                             {% if user_membership.role == 'admin' %}
@@ -148,8 +355,8 @@
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-primary">Invite Member</button>
+                    <button type="button" class="btn btn-secondary feature-btn" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary feature-btn">Invite Member</button>
                 </div>
             </form>
         </div>
@@ -157,21 +364,22 @@
 </div>
 {% endif %}
 
+
 <!-- Add Paper Modal -->
 {% if is_member %}
-<div class="modal fade" id="addPaperModal" tabindex="-1">
+<div class="modal fade" id="addPaperModal" tabindex="-1" aria-labelledby="addPaperModalLabel" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title">Add Paper to Group</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                <h5 class="modal-title" id="addPaperModalLabel">Add Paper to Group</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <form method="post" action="{% url 'groups:add_paper' group.pk %}">
                 <div class="modal-body">
                     {% csrf_token %}
                     <div class="mb-3">
-                        <label class="form-label">Select Paper</label>
-                        <select name="paper_id" class="form-control" required>
+                        <label for="paperSelect" class="form-label">Select Paper</label>
+                        <select name="paper_id" id="paperSelect" class="form-control" required>
                             <option value="">Choose a paper...</option>
                             {% for paper in user_papers %}
                                 <option value="{{ paper.id }}">{{ paper.title }}</option>
@@ -180,8 +388,8 @@
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-primary">Add Paper</button>
+                    <button type="button" class="btn btn-secondary feature-btn" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary feature-btn">Add Paper</button>
                 </div>
             </form>
         </div>
@@ -197,17 +405,17 @@ function updateRole(userId, role) {
         const form = document.createElement('form');
         form.method = 'POST';
         form.action = '{% url "groups:update_role" group.pk 0 %}'.replace('0', userId);
-        
+
         const csrfToken = document.createElement('input');
         csrfToken.type = 'hidden';
         csrfToken.name = 'csrfmiddlewaretoken';
         csrfToken.value = '{{ csrf_token }}';
-        
+
         const roleInput = document.createElement('input');
         roleInput.type = 'hidden';
         roleInput.name = 'role';
         roleInput.value = role;
-        
+
         form.appendChild(csrfToken);
         form.appendChild(roleInput);
         document.body.appendChild(form);

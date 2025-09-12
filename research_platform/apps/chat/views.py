@@ -10,6 +10,7 @@ from django.db import models
 from .models import ChatRoom, ChatMessage
 from apps.papers.models import Paper
 from apps.groups.models import Group
+from apps.chat.utils import is_offensive
 import json
 
 class ChatRoomView(LoginRequiredMixin, TemplateView):
@@ -52,6 +53,11 @@ class ChatRoomView(LoginRequiredMixin, TemplateView):
         message_text = request.POST.get('message', '').strip()
         if message_text:
             # Save message to database
+            if is_offensive(message_text):
+                if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                        return JsonResponse({'status': 'error', 'message': 'Message flagged as offensive'})
+                messages.error(request, "Your message was blocked as offensive.")
+                return redirect('chat:paper_chat', paper_id=paper_id)
             chat_message = ChatMessage.objects.create(
                 room=chat_room,
                 user=request.user,
@@ -99,6 +105,8 @@ def send_message_ajax(request, room_id):
             message_text = request.POST.get('message', '').strip()
             
             if message_text:
+                if is_offensive(message_text):
+                    return JsonResponse({'status': 'error', 'message': 'Message flagged as offensive'})
                 # Save message
                 chat_message = ChatMessage.objects.create(
                     room=chat_room,
@@ -208,6 +216,12 @@ class GroupChatRoomView(ChatRoomView):
         
         message_text = request.POST.get('message', '').strip()
         if message_text:
+            if is_offensive(message_text):
+                if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                    return JsonResponse({'status': 'error', 'message': 'Message flagged as offensive'})
+                messages.error(request, "Your message was blocked as offensive.")
+                return redirect('chat:group_chat', group_id=group_id)
+            #save only if safe
             ChatMessage.objects.create(
                 room=chat_room,
                 user=request.user,
@@ -215,7 +229,7 @@ class GroupChatRoomView(ChatRoomView):
             )
             if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
                 return JsonResponse({'status': 'success', 'message': 'Message sent'})
-        
+    
         return redirect('chat:group_chat', group_id=group_id)
     
 from django.shortcuts import render

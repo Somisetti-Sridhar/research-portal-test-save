@@ -3,16 +3,77 @@
 {% block title %}Server Error - Research Platform{% endblock %}
 
 {% block content %}
+<style>
+    .feature-btn {
+        background: var(--primary-gradient) !important;
+        border: none;
+        color: var(--text-primary) !important;
+        padding: 0.75rem 1.5rem;
+        border-radius: 50px;
+        font-weight: 500;
+        transition: var(--transition);
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        position: relative;
+        overflow: hidden;
+        cursor: pointer;
+        user-select: none;
+        justify-content: center;
+    }
+
+    .feature-btn:hover {
+        transform: translateX(5px);
+        box-shadow: 0 10px 25px rgba(102, 126, 234, 0.4);
+        color: var(--text-primary) !important;
+    }
+
+    .button-group {
+        display: flex;
+        justify-content: center;
+        gap: 1rem;
+        margin-top: 1rem;
+    }
+
+    /* Glassy card background from base/home */
+    .glossy-card {
+        background: var(--glass-bg);
+        backdrop-filter: blur(10px);
+        border: 1px solid var(--glass-border);
+        border-radius: var(--border-radius);
+        box-shadow: var(--shadow-glass);
+        color: var(--text-primary);
+    }
+
+    /* Muted large error code with light opacity */
+    .error-code {
+        color: rgba(255, 255, 255, 0.3);
+        font-weight: 700;
+        font-size: 6rem;
+        margin-bottom: 0;
+        line-height: 1;
+    }
+
+    h2, p.lead {
+        color: var(--text-primary);
+    }
+</style>
+
 <div class="row justify-content-center">
     <div class="col-md-6 text-center">
-        <div class="card">
+        <div class="card glossy-card">
             <div class="card-body">
-                <h1 class="display-1 text-muted">500</h1>
+                <h1 class="error-code">500</h1>
                 <h2>Server Error</h2>
                 <p class="lead">Something went wrong on our end. Please try again later.</p>
-                <div class="mt-4">
-                    <a href="{% url 'home' %}" class="btn btn-primary">Go Home</a>
-                    <button onclick="history.back()" class="btn btn-outline-primary">Go Back</button>
+                <div class="button-group">
+                    <a href="{% url 'home' %}" class="feature-btn">
+                        Go Home
+                    </a>
+                    <button onclick="history.back()" class="feature-btn" type="button">
+                        Go Back
+                    </button>
                 </div>
             </div>
         </div>

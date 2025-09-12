@@ -3,9 +3,83 @@
 {% block title %}Create Group - Research Platform{% endblock %}
 
 {% block content %}
+<style>
+    .glossy-card {
+        background: var(--glass-bg);
+        backdrop-filter: blur(10px);
+        border: 1px solid var(--glass-border);
+        border-radius: var(--border-radius);
+        box-shadow: var(--shadow-glass);
+        color: var(--text-primary);
+        transition: var(--transition);
+        padding: 2rem 2rem;
+    }
+
+    .feature-btn {
+        background: var(--primary-gradient) !important;
+        border: none;
+        color: var(--text-primary) !important;
+        padding: 0.675rem 1.75rem;
+        border-radius: 50px;
+        font-weight: 600;
+        font-size: 1rem;
+        transition: var(--transition);
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.6rem;
+        position: relative;
+        overflow: hidden;
+        cursor: pointer;
+        user-select: none;
+        justify-content: center;
+        box-shadow: var(--shadow-glass);
+    }
+
+    .feature-btn:hover {
+        transform: translateX(6px);
+        box-shadow: 0 12px 28px rgba(102, 126, 234, 0.45);
+        color: var(--text-primary) !important;
+    }
+
+    label.form-label, .form-check-label {
+        color: var(--text-primary);
+        font-weight: 600;
+    }
+
+    input[type="text"], textarea {
+        background: var(--glass-bg);
+        border: 1.5px solid var(--glass-border);
+        color: var(--text-primary);
+        border-radius: var(--border-radius);
+        backdrop-filter: blur(12px);
+        transition: var(--transition);
+        box-shadow: none;
+        font-weight: 500;
+        font-size: 1rem;
+        padding: 0.5rem 0.75rem;
+        width: 100%;
+        resize: vertical;
+    }
+
+    input[type="text"]:focus, textarea:focus {
+        border-color: var(--primary-gradient);
+        box-shadow: 0 0 8px rgba(102, 126, 234, 0.6);
+        outline: none;
+        background: var(--glass-bg);
+        color: var(--text-primary);
+    }
+
+    .form-check-input {
+        cursor: pointer;
+        margin-top: 0.3rem;
+        border-radius: var(--border-radius);
+    }
+</style>
+
 <div class="row justify-content-center">
     <div class="col-md-6">
-        <div class="card">
+        <div class="card glossy-card">
             <div class="card-header">
                 <h3>Create Research Group</h3>
             </div>
@@ -26,8 +100,8 @@
                             Private Group (invitation only)
                         </label>
                     </div>
-                    <button type="submit" class="btn btn-primary">Create Group</button>
-                    <a href="{% url 'groups:list' %}" class="btn btn-secondary">Cancel</a>
+                    <button type="submit" class="feature-btn">Create Group</button>
+                    <a href="{% url 'groups:list' %}" class="feature-btn" style="background: var(--secondary-gradient) !important; margin-left: 1rem;">Cancel</a>
                 </form>
             </div>
         </div>

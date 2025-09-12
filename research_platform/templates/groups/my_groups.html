@@ -3,68 +3,157 @@
 {% block title %}My Groups - Research Platform{% endblock %}
 
 {% block content %}
+<style>
+    .feature-btn {
+        background: var(--primary-gradient) !important;
+        border: none;
+        color: var(--text-primary) !important;
+        padding: 0.675rem 1.75rem;
+        border-radius: 50px;
+        font-weight: 600;
+        font-size: 1rem;
+        transition: var(--transition);
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.6rem;
+        position: relative;
+        overflow: hidden;
+        cursor: pointer;
+        user-select: none;
+        justify-content: center;
+        box-shadow: var(--shadow-glass);
+    }
+    .feature-btn:hover {
+        transform: translateX(6px);
+        box-shadow: 0 12px 28px rgba(102, 126, 234, 0.45);
+        color: var(--text-primary) !important;
+    }
+
+    .glossy-card {
+        background: var(--glass-bg);
+        backdrop-filter: blur(10px);
+        border: 1px solid var(--glass-border);
+        border-radius: var(--border-radius);
+        box-shadow: var(--shadow-glass);
+        color: var(--text-primary);
+        height: 100%;
+        transition: var(--transition);
+        padding: 1.25rem 1.5rem;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+    }
+
+    h2 {
+        background: var(--primary-gradient);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        user-select: none;
+        margin-bottom: 1.5rem;
+        font-weight: 700;
+    }
+
+    .card-title {
+        font-weight: 700;
+        color: var(--text-primary);
+        margin-bottom: 1rem;
+    }
+
+    .badge.bg-primary {
+        background: var(--primary-gradient) !important;
+        color: var(--text-primary) !important;
+        border-radius: 50px;
+        padding: 0.25rem 0.75rem;
+        font-weight: 600;
+        font-size: 0.85rem;
+        user-select: none;
+    }
+
+    .card-text small {
+        color: var(--text-secondary);
+        font-weight: 500;
+    }
+
+    .card-text {
+        color: var(--text-secondary);
+        margin-bottom: 1rem;
+    }
+
+    .text-center p {
+        color: var(--text-secondary);
+        font-weight: 600;
+        font-size: 1.125rem;
+        margin-bottom: 1rem;
+    }
+
+    /* Pagination styling */
+    .pagination .page-link {
+        color: var(--text-secondary);
+        background: transparent;
+        border: 1px solid var(--glass-border);
+        border-radius: var(--border-radius);
+        transition: var(--transition);
+        font-weight: 600;
+    }
+
+    .pagination .page-item.active .page-link {
+        background: var(--primary-gradient);
+        border-color: var(--primary-gradient);
+        color: var(--text-primary);
+    }
+
+    .pagination .page-link:hover {
+        background: var(--secondary-gradient);
+        border-color: var(--secondary-gradient);
+        color: var(--text-primary);
+    }
+</style>
+
 <div class="d-flex justify-content-between align-items-center mb-4">
     <h2>My Groups</h2>
-    <a href="{% url 'groups:create' %}" class="btn btn-primary">Create New Group</a>
+    <a href="{% url 'groups:create' %}" class="feature-btn">Create New Group</a>
 </div>
 
 <div class="row">
     {% for membership in memberships %}
         <div class="col-md-6 col-lg-4 mb-4">
-            <div class="card">
-                <div class="card-body">
+            <div class="card glossy-card">
+                <div>
                     <h5 class="card-title">{{ membership.group.name }}</h5>
                     <p class="card-text">{{ membership.group.description|truncatechars:100 }}</p>
-                    <p class="card-text">
-                        <small class="text-muted">
-                            Role: <span class="badge bg-primary">{{ membership.role|title }}</span>
-                        </small>
-                    </p>
-                    <p class="card-text">
-                        <small class="text-muted">
-                            Joined: {{ membership.joined_at|date:"M d, Y" }}
-                        </small>
-                    </p>
-                    <a href="{% url 'groups:detail' membership.group.pk %}" class="btn btn-primary">View Group</a>
+                    <p class="card-text"><small>Role: <span class="badge bg-primary">{{ membership.role|title }}</span></small></p>
+                    <p class="card-text"><small>Joined: {{ membership.joined_at|date:"M d, Y" }}</small></p>
                 </div>
+                <a href="{% url 'groups:detail' membership.group.pk %}" class="feature-btn mt-3 align-self-start">View Group</a>
             </div>
         </div>
     {% empty %}
         <div class="col-12">
             <div class="text-center">
                 <p>You haven't joined any groups yet.</p>
-                <a href="{% url 'groups:list' %}" class="btn btn-primary">Browse Groups</a>
+                <a href="{% url 'groups:list' %}" class="feature-btn">Browse Groups</a>
             </div>
         </div>
     {% endfor %}
 </div>
 
-<!-- Pagination -->
 {% if is_paginated %}
 <nav aria-label="My groups pagination">
     <ul class="pagination justify-content-center">
         {% if page_obj.has_previous %}
-            <li class="page-item">
-                <a class="page-link" href="?page={{ page_obj.previous_page_number }}">Previous</a>
-            </li>
+            <li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}">Previous</a></li>
         {% endif %}
-        
         {% for num in page_obj.paginator.page_range %}
             {% if page_obj.number == num %}
-                <li class="page-item active">
-                    <span class="page-link">{{ num }}</span>
-                </li>
+                <li class="page-item active"><span class="page-link">{{ num }}</span></li>
             {% else %}
-                <li class="page-item">
-                    <a class="page-link" href="?page={{ num }}">{{ num }}</a>
-                </li>
+                <li class="page-item"><a class="page-link" href="?page={{ num }}">{{ num }}</a></li>
             {% endif %}
         {% endfor %}
-        
         {% if page_obj.has_next %}
-            <li class="page-item">
-                <a class="page-link" href="?page={{ page_obj.next_page_number }}">Next</a>
-            </li>
+            <li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}">Next</a></li>
         {% endif %}
     </ul>
 </nav>

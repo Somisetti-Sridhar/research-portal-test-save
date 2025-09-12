@@ -3,15 +3,225 @@
 {% block title %}Papers - Research Platform{% endblock %}
 
 {% block content %}
+<style>
+    .feature-btn {
+        background: var(--primary-gradient) !important;
+        border: none;
+        color: var(--text-primary) !important;
+        padding: 0.675rem 1.75rem;
+        border-radius: 50px;
+        font-weight: 600;
+        font-size: 1rem;
+        transition: var(--transition);
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.6rem;
+        position: relative;
+        overflow: hidden;
+        cursor: pointer;
+        user-select: none;
+        justify-content: center;
+        box-shadow: var(--shadow-glass);
+    }
+    .feature-btn:hover {
+        transform: translateX(6px);
+        box-shadow: 0 12px 28px rgba(102, 126, 234, 0.45);
+        color: var(--text-primary) !important;
+    }
+
+    .glossy-card {
+        background: var(--glass-bg);
+        backdrop-filter: blur(10px);
+        border: 1px solid var(--glass-border);
+        border-radius: var(--border-radius);
+        box-shadow: var(--shadow-glass);
+        color: var(--text-primary);
+        height: 100%;
+        transition: var(--transition);
+        padding: 1.25rem 1.5rem;
+    }
+
+    h2, h5.card-title {
+        background: var(--primary-gradient);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        user-select: none;
+        margin-bottom: 1rem;
+    }
+
+    .card-title a {
+        color: var(--text-primary);
+        font-weight: 700;
+        transition: var(--transition);
+        text-decoration: none;
+    }
+    .card-title a:hover {
+        color: var(--primary-gradient);
+        text-decoration: underline;
+    }
+
+    .card-text {
+        color: var(--text-secondary);
+    }
+
+    /* Author color improved */
+    .card-text small {
+        color: rgba(255, 255, 255, 0.75);
+        font-weight: 500;
+    }
+
+    /* Reduced brightness for categories */
+    .badge.bg-secondary {
+        background-color: rgba(255, 255, 255, 0.15) !important;
+        color: var(--text-primary) !important;
+        padding: 0.25rem 0.75rem;
+        border-radius: 50px;
+        font-weight: 600;
+        font-size: 0.8rem;
+        margin-right: 0.4rem;
+        user-select: none;
+    }
+
+    .d-flex.justify-content-between.align-items-center {
+        margin-top: auto;
+        font-size: 0.875rem;
+        color: var(--text-secondary);
+    }
+
+    /* Pagination consistent with base */
+    .pagination .page-link {
+        color: var(--text-secondary);
+        background: transparent;
+        border: 1px solid var(--glass-border);
+        border-radius: var(--border-radius);
+        transition: var(--transition);
+        font-weight: 600;
+    }
+
+    .pagination .page-item.active .page-link {
+        background: var(--primary-gradient);
+        border-color: var(--primary-gradient);
+        color: var(--text-primary);
+    }
+
+    .pagination .page-link:hover {
+        background: var(--secondary-gradient);
+        border-color: var(--secondary-gradient);
+        color: var(--text-primary);
+    }
+
+    /* Form controls styling */
+    input.form-control, select.form-control {
+        background: var(--glass-bg);
+        border: 1.5px solid var(--glass-border);
+        color: var(--text-primary);
+        border-radius: var(--border-radius);
+        backdrop-filter: blur(12px);
+        transition: var(--transition);
+        box-shadow: none;
+        font-weight: 500;
+        font-size: 1rem;
+        height: calc(2.75rem + 2px);
+        padding: 0.5rem 0.75rem;
+    }
+
+    input.form-control::placeholder {
+        color: var(--text-secondary);
+        font-weight: 400;
+    }
+
+    input.form-control:focus, select.form-control:focus {
+        border-color: var(--primary-gradient);
+        box-shadow: 0 0 8px rgba(102, 126, 234, 0.6);
+        outline: none;
+        background: var(--glass-bg);
+        color: var(--text-primary);
+    }
+
+    .btn-outline-primary {
+        color: var(--text-secondary);
+        border-color: var(--glass-border);
+        background: transparent;
+        border-radius: var(--border-radius);
+        font-weight: 600;
+        font-size: 1rem;
+        letter-spacing: 0.02em;
+        transition: var(--transition);
+        box-shadow: none;
+        padding: 0.6rem 1rem;
+        height: calc(2.75rem + 2px);
+    }
+
+    .btn-outline-primary:hover {
+        background: var(--primary-gradient);
+        border-color: var(--primary-gradient);
+        color: var(--text-primary);
+        box-shadow: none;
+    }
+
+    /* Enhanced glossy select with white text and custom arrow */
+    select.form-control {
+        color: #fff;
+        background: rgba(12,18,45,0.38);
+        border: 2px solid var(--glass-border, #7c7caf);
+        border-radius: 16px;
+        backdrop-filter: blur(12px);
+        padding: 0.5rem 2rem 0.5rem 0.75rem;
+        font-size: 1.08rem;
+        font-weight: 500;
+        box-shadow: 0 2px 16px 0 rgba(120,100,225,0.04);
+        transition: border 0.18s, box-shadow 0.24s;
+        appearance: none;
+        -webkit-appearance: none;
+        -moz-appearance: none;
+        outline: none;
+        position: relative;
+        background-image:
+            url('data:image/svg+xml;utf8,<svg fill="white" height="16" viewBox="0 0 20 20" width="16" xmlns="http://www.w3.org/2000/svg"><path d="M7.293 7.293a1 1 0 011.414 0L10 8.586l1.293-1.293a1 1 0 111.414 1.414l-2 2a1 1 0 01-1.414 0l-2-2a1 1 0 010-1.414z"/></svg>');
+        background-repeat: no-repeat;
+        background-position: right 1.2rem center;
+        background-size: 1.1rem;
+    }
+
+    select.form-control:focus, select.form-control:hover {
+        border: 2px solid var(--primary-gradient, #6b8aff);
+        box-shadow: 0 0 16px 0 rgba(102,126,234,0.25);
+        background-color: rgba(28,36,78,0.64);
+        color: #fff;
+    }
+
+    /* Dropdown options styling */
+    select.form-control option {
+        background: #191f42;
+        color: #fff;
+        font-weight: 500;
+        padding: 0.3rem 1rem;
+    }
+
+    /* fallback for all options */
+    option {
+        color: #fff;
+        background: #191f42;
+    }
+
+    /* Styling placeholder option (value="") */
+    select.form-control option[value=""] {
+        color: #cccccc;
+        font-style: italic;
+    }
+</style>
+
 <div class="d-flex justify-content-between align-items-center mb-4">
     <h2>Research Papers</h2>
     {% if user.is_authenticated and user.user_type != 'reader' %}
-        <a href="{% url 'papers:upload' %}" class="btn btn-primary">Upload Paper</a>
+        <a href="{% url 'papers:upload' %}" class="feature-btn">Upload Paper</a>
     {% endif %}
 </div>
 
 <!-- Search and Filter Section -->
-<div class="card mb-4">
+<div class="card glossy-card mb-4">
     <div class="card-body">
         <form method="get" class="row g-3">
             <div class="col-md-4">
@@ -47,8 +257,8 @@
 <div class="row">
     {% for paper in papers %}
         <div class="col-md-6 col-lg-4 mb-4">
-            <div class="card h-100">
-                <div class="card-body">
+            <div class="card glossy-card h-100">
+                <div class="card-body d-flex flex-column">
                     <h5 class="card-title">
                         <a href="{% url 'papers:detail' paper.pk %}" class="text-decoration-none">
                             {{ paper.title|truncatechars:60 }}
@@ -56,9 +266,7 @@
                     </h5>
                     <p class="card-text">{{ paper.abstract|truncatechars:120 }}</p>
                     <p class="card-text">
-                        <small class="text-muted">
-                            By {{ paper.authors|truncatechars:50 }}
-                        </small>
+                        <small>By {{ paper.authors|truncatechars:50 }}</small>
                     </p>
                     <div class="mb-2">
                         {% for category in paper.categories.all %}
@@ -66,12 +274,11 @@
                         {% endfor %}
                     </div>
                     <div class="d-flex justify-content-between align-items-center">
-                        <small class="text-muted">
-                            {{ paper.publication_date|date:"Y" }} | 
-                            Views: {{ paper.view_count }}
+                        <small class="text-secondary">
+                            {{ paper.publication_date|date:"Y" }} | Views: {{ paper.view_count }}
                         </small>
                         {% if user.is_authenticated %}
-                            <a href="{% url 'papers:bookmark' paper.pk %}" class="btn btn-outline-primary btn-sm">
+                            <a href="{% url 'papers:bookmark' paper.pk %}" class="feature-btn btn-sm p-1" style="font-size: 1rem; min-width: 38px; justify-content: center;">
                                 <i class="far fa-bookmark"></i>
                             </a>
                         {% endif %}
@@ -80,41 +287,28 @@
             </div>
         </div>
     {% empty %}
-        <div class="col-12">
-            <div class="text-center">
-                <p>No papers found matching your criteria.</p>
-                <a href="{% url 'papers:list' %}" class="btn btn-primary">View All Papers</a>
-            </div>
+        <div class="col-12 text-center text-secondary">
+            <p>No papers found matching your criteria.</p>
+            <a href="{% url 'papers:list' %}" class="feature-btn">View All Papers</a>
         </div>
     {% endfor %}
 </div>
 
-<!-- Pagination -->
 {% if is_paginated %}
 <nav aria-label="Papers pagination">
     <ul class="pagination justify-content-center">
         {% if page_obj.has_previous %}
-            <li class="page-item">
-                <a class="page-link" href="?search={{ search_query }}&category={{ selected_category }}&sort={{ sort_by }}&page={{ page_obj.previous_page_number }}">Previous</a>
-            </li>
+            <li class="page-item"><a class="page-link" href="?search={{ search_query }}&category={{ selected_category }}&sort={{ sort_by }}&page={{ page_obj.previous_page_number }}">Previous</a></li>
         {% endif %}
-        
         {% for num in page_obj.paginator.page_range %}
             {% if page_obj.number == num %}
-                <li class="page-item active">
-                    <span class="page-link">{{ num }}</span>
-                </li>
+                <li class="page-item active"><span class="page-link">{{ num }}</span></li>
             {% else %}
-                <li class="page-item">
-                    <a class="page-link" href="?search={{ search_query }}&category={{ selected_category }}&sort={{ sort_by }}&page={{ num }}">{{ num }}</a>
-                </li>
+                <li class="page-item"><a class="page-link" href="?search={{ search_query }}&category={{ selected_category }}&sort={{ sort_by }}&page={{ num }}">{{ num }}</a></li>
             {% endif %}
         {% endfor %}
-        
         {% if page_obj.has_next %}
-            <li class="page-item">
-                <a class="page-link" href="?search={{ search_query }}&category={{ selected_category }}&sort={{ sort_by }}&page={{ page_obj.next_page_number }}">Next</a>
-            </li>
+            <li class="page-item"><a class="page-link" href="?search={{ search_query }}&category={{ selected_category }}&sort={{ sort_by }}&page={{ page_obj.next_page_number }}">Next</a></li>
         {% endif %}
     </ul>
 </nav>
