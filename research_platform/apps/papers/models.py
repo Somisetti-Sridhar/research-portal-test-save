@@ -27,6 +27,7 @@ class Paper(models.Model):
     is_approved = models.BooleanField(default=False)
     download_count = models.PositiveIntegerField(default=0)
     view_count = models.PositiveIntegerField(default=0)
+    summary = models.TextField(blank=True, null=True)
     
     class Meta:
         db_table = 'papers'

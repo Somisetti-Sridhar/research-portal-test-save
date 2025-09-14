@@ -52,6 +52,9 @@
                 <i class="fas fa-download"></i> Download PDF
                 </a>
                 {% endif %}
+                <a href="{% url 'papers:summary' paper.pk %}" class="btn btn-warning">
+                <i class="fas fa-lightbulb"></i> View Summary
+                </a>
                 </div>
             </div>
         </div>

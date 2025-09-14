@@ -1,0 +1,11 @@
+<!-- templates/papers/summary.html -->
+{% extends "base.html" %}
+{% block content %}
+<h2>Summary for: {{ paper.title }}</h2>
+
+{% if paper.summary %}
+  <p>{{ paper.summary }}</p>
+{% else %}
+  <p><em>Summary is being generated. Please check back later.</em></p>
+{% endif %}
+{% endblock %}

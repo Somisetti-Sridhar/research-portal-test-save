@@ -454,3 +454,17 @@ class AdminPaperListView(LoginRequiredMixin, UserPassesTestMixin, ListView):
         context = super().get_context_data(**kwargs)
         context['search_query'] = self.request.GET.get('search', '')
         return context
+
+
+class PaperSummaryView(LoginRequiredMixin, DetailView):
+    model = Paper
+    template_name = "papers/summary.html"
+    context_object_name = "paper"
+
+    def get_queryset(self):
+        user = self.request.user
+        if user.is_authenticated and user.user_type in ["moderator", "admin"]:
+            return Paper.objects.all()
+        elif user.is_authenticated and user.user_type == "publisher":
+            return Paper.objects.filter(uploaded_by=user) | Paper.objects.filter(is_approved=True)
+        return Paper.objects.filter(is_approved=True)

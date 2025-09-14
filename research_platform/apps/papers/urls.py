@@ -21,5 +21,6 @@ urlpatterns = [
     path('<int:pk>/reject/', views.reject_paper, name='reject'),
     path('recommendations/', views.get_recommendations, name='recommendations'),
     path('admin-manage/', views.AdminPaperListView.as_view(), name='admin_paper_manage'),
-
+    path('<int:pk>/summary/', views.PaperSummaryView.as_view(), name='summary'),
+    
 ]
