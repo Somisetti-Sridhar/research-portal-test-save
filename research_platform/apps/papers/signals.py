@@ -13,7 +13,7 @@ def process_summary(paper_id, pdf_file):
         Paper.objects.filter(id=paper_id).update(summary=summary)
     except Exception as e:
         # Log or print the error instead of failing silently
-        print(f"[ERROR] Failed to generate summary for Paper {paper_id}: {e}")
+        print(f"[ERROR] Failing to generate summary for Paper {paper_id}: {e}")
 
 
 @receiver(post_save, sender=Paper)
