@@ -232,13 +232,12 @@ class GroupChatRoomView(ChatRoomView):
     
         return redirect('chat:group_chat', group_id=group_id)
 
-# --- NEW VIEW ADDED HERE ---
-# def yggdrasil_chatbot_view(request):
-#     """
-#     Renders the standalone Yggdrasil chatbot page.
-#     """
-#     # This path is now correct because of the settings change
-#     return render(request, 'chat/yggdrasil_chatbot.html')
+
+def yggdrasil_chatbot_view(request):
+    """
+    Renders the standalone Yggdrasil chatbot page.
+    """
+    return render(request, 'chat/yggdrasil_chatbot.html')
 
 def errorView(request):
     """Custom 500 error page view"""

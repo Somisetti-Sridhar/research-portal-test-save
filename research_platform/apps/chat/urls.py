@@ -13,5 +13,5 @@ urlpatterns = [
     path('ajax/send/<int:room_id>/', views.send_message_ajax, name='send_message_ajax'),
     path('my-chats/', views.MyChatRoomsView.as_view(), name='my_chats'),
     path('500/', views.errorView, name='500'),
-    # path('yggdrasil_chatbot/', views.yggdrasil_chatbot_view.as_view(), name='yggdrasil_chatbot'),
+    path('yggdrasil_chatbot/', views.yggdrasil_chatbot_view, name='yggdrasil_chatbot'),
 ]
