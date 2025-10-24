@@ -1,4 +1,5 @@
 from apps.ml_engine.recommendation_engine import ImprovedRecommendationEngine
+from research_platform.apps.accounts.models import User
 
 if __name__=="__main__":
     engine = ImprovedRecommendationEngine()
