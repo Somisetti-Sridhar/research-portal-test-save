@@ -1,136 +1,241 @@
-import random
+# import numpy as np
+# from sklearn.feature_extraction.text import TfidfVectorizer
+# from sklearn.metrics.pairwise import cosine_similarity
+# from django.db.models import Count
+# from apps.papers.models import Paper, Rating, Bookmark
+# from apps.ml_engine.models import PaperEmbedding, UserRecommendation
+# from apps.accounts.models import User
+
+
+# class RecommendationEngine:
+#     def __init__(self):
+#         pass
+
+#     def build_embeddings(self):
+#         papers = Paper.objects.filter(is_approved=True)
+#         docs = [f"{p.title} {p.summary or ''} {p.abstract or ''}" for p in papers]
+#         vectorizer = TfidfVectorizer(max_features=512, stop_words='english')
+#         tfidf_matrix = vectorizer.fit_transform(docs)
+#         for idx, paper in enumerate(papers):
+#             PaperEmbedding.objects.update_or_create(
+#                 paper=paper,
+#                 defaults={
+#                     'embedding': tfidf_matrix[idx].toarray().flatten().tolist(),
+#                     'model_version': 'tfidf-v1'
+#                 }
+#             )
+
+#     def get_user_profile_vector(self, user):
+#         paper_ids = list(
+#             Rating.objects.filter(user=user, rating__gte=4).values_list('paper_id', flat=True)
+#         ) + list(
+#             Bookmark.objects.filter(user=user).values_list('paper_id', flat=True)
+#         )
+#         embeddings = PaperEmbedding.objects.filter(paper_id__in=paper_ids)
+#         if not embeddings.exists():
+#             return None
+#         arr = np.array([np.array(e.embedding) for e in embeddings])
+#         return arr.mean(axis=0)
+
+#     def content_based_recommend(self, user, top_k=10):
+#         user_vec = self.get_user_profile_vector(user)
+#         if user_vec is None:
+#             popular = Paper.objects.filter(is_approved=True).order_by('-view_count')[:top_k]
+#             return [(paper, paper.view_count) for paper in popular]
+
+#         paper_embeds = PaperEmbedding.objects.select_related('paper')
+#         vectors = np.array([pe.embedding for pe in paper_embeds])
+#         similarities = cosine_similarity([user_vec], vectors)[0]
+#         exclude_ids = set(
+#             Rating.objects.filter(user=user).values_list('paper_id', flat=True)
+#         ) | set(
+#             Bookmark.objects.filter(user=user).values_list('paper_id', flat=True)
+#         )
+#         scored = [
+#             (pe.paper, sim) for pe, sim in zip(paper_embeds, similarities)
+#             if pe.paper.id not in exclude_ids
+#         ]
+#         scored.sort(key=lambda tup: tup[1], reverse=True)
+#         return scored[:top_k]
+
+#     def collaborative_filter(self, user, top_k=10):
+#         my_rated = list(
+#             Rating.objects.filter(user=user, rating__gte=4).values_list('paper_id', flat=True)
+#         )
+#         if not my_rated:
+#             return []
+#         similar_users = Rating.objects.filter(
+#             paper_id__in=my_rated, rating__gte=4
+#         ).exclude(user=user).values_list('user', flat=True).distinct()
+#         recs = Rating.objects.filter(
+#             user_id__in=similar_users, rating__gte=4
+#         ).exclude(paper_id__in=my_rated).values('paper_id').annotate(score=Count('id'))
+#         result = [
+#             (Paper.objects.get(id=row['paper_id']), row['score'])
+#             for row in recs.order_by('-score')[:top_k]
+#         ]
+#         return result
+
+#     def hybrid_recommend(self, user, top_k=10, alpha=0.6):
+#         content = self.content_based_recommend(user, top_k * 2)
+#         collaborative = self.collaborative_filter(user, top_k * 2)
+#         scores = {}
+
+#         for paper, score in content:
+#             scores[paper.id] = scores.get(paper.id, 0) + alpha * score
+#         for paper, score in collaborative:
+#             scores[paper.id] = scores.get(paper.id, 0) + (1 - alpha) * score
+
+#         papers = Paper.objects.in_bulk(scores.keys())
+#         ranked = sorted(
+#             ((papers[pid], score) for pid, score in scores.items()),
+#             key=lambda x: x[1],
+#             reverse=True
+#         )
+#         return ranked[:top_k]
+
+#     def save_recommendations(self, user, ranked_papers):
+#         UserRecommendation.objects.filter(user=user).delete()
+#         for paper, score in ranked_papers:
+#             UserRecommendation.objects.create(
+#                 user=user,
+#                 paper=paper,
+#                 score=score,
+#                 reason="Recommended by hybrid model"
+#             )
+
+#     def generate_for_user(self, user, top_k=10):
+#         self.build_embeddings()  # Update embeddings (can be optimized to run once)
+#         ranked = self.hybrid_recommend(user, top_k=top_k)
+#         self.save_recommendations(user, ranked)
+#         return ranked
+
+
+import numpy as np
+from sentence_transformers import SentenceTransformer
+from sklearn.metrics.pairwise import cosine_similarity
 from django.db.models import Count
-from .models import UserRecommendation, PaperEmbedding
 from apps.papers.models import Paper, Rating, Bookmark
+from apps.ml_engine.models import PaperEmbedding, UserRecommendation
 from apps.accounts.models import User
 
-class RecommendationEngine:
+
+class ImprovedRecommendationEngine:
     def __init__(self):
-        pass
-    
-    def generate_paper_embeddings(self, paper_id):
-        """Generate simple embeddings for a paper"""
-        paper = Paper.objects.get(id=paper_id)
-        
-        # Simple embedding based on title and abstract length
-        # In production, use actual ML models
-        embedding = [
-            len(paper.title),
-            len(paper.abstract),
-            paper.view_count,
-            paper.download_count,
-            random.random()  # Random component for diversity
-        ]
-        
-        # Save embedding
-        PaperEmbedding.objects.update_or_create(
-            paper=paper,
-            defaults={
-                'embedding': embedding,
-                'model_version': 'simple-v1'
-            }
+        # Use a lightweight, well-performing sentence-transformer model
+        self.model = SentenceTransformer('all-MiniLM-L6-v2')
+
+    def build_embeddings(self):
+        papers = Paper.objects.filter(is_approved=True)
+        docs = [f"{p.title} {p.summary or ''} {p.abstract or ''}" for p in papers]
+        embeddings = self.model.encode(docs, convert_to_numpy=True)
+        for paper, emb in zip(papers, embeddings):
+            PaperEmbedding.objects.update_or_create(
+                paper=paper,
+                defaults={'embedding': emb.tolist(), 'model_version': 'bert-mini-v1'}
+            )
+
+    def get_user_profile_vector(self, user):
+        paper_ids = list(
+            Rating.objects.filter(user=user, rating__gte=4).values_list('paper_id', flat=True)
+        ) + list(
+            Bookmark.objects.filter(user=user).values_list('paper_id', flat=True)
         )
-        
-        return embedding
-    
-    def collaborative_filtering(self, user_id, top_k=10):
-        """Simple collaborative filtering based on user ratings"""
-        user = User.objects.get(id=user_id)
-        
-        # Get papers rated highly by the user
-        user_high_rated = Rating.objects.filter(
-            user=user, 
-            rating__gte=4
-        ).values_list('paper_id', flat=True)
-        
-        if not user_high_rated:
+        embeddings = PaperEmbedding.objects.filter(paper_id__in=paper_ids)
+        if not embeddings.exists():
+            return None
+        arr = np.array([np.array(e.embedding) for e in embeddings])
+        return arr.mean(axis=0)
+
+    def content_based_recommend(self, user, top_k=10):
+        user_vec = self.get_user_profile_vector(user)
+        if user_vec is None:
+            popular = Paper.objects.filter(is_approved=True).order_by('-view_count')[:top_k]
+            return [(paper, paper.view_count) for paper in popular]
+
+        paper_embeds = PaperEmbedding.objects.select_related('paper')
+        vectors = np.array([pe.embedding for pe in paper_embeds])
+        similarities = cosine_similarity([user_vec], vectors)[0]
+        exclude_ids = set(
+            Rating.objects.filter(user=user).values_list('paper_id', flat=True)
+        ) | set(
+            Bookmark.objects.filter(user=user).values_list('paper_id', flat=True)
+        )
+        scored = [
+            (pe.paper, sim) for pe, sim in zip(paper_embeds, similarities)
+            if pe.paper.id not in exclude_ids
+        ]
+        scored.sort(key=lambda tup: tup[1], reverse=True)
+        return scored[:top_k]
+
+    def collaborative_filter(self, user, top_k=10):
+        my_rated = list(
+            Rating.objects.filter(user=user, rating__gte=4).values_list('paper_id', flat=True)
+        )
+        if not my_rated:
             return []
-        
-        # Find users who also rated these papers highly
         similar_users = Rating.objects.filter(
-            paper_id__in=user_high_rated,
-            rating__gte=4
-        ).exclude(user=user).values_list('user_id', flat=True).distinct()
-        
-        # Get papers these similar users rated highly
-        recommendations = Rating.objects.filter(
-            user_id__in=similar_users,
-            rating__gte=4
-        ).exclude(
-            paper_id__in=user_high_rated
-        ).values('paper_id').annotate(
-            score=Count('id')
-        ).order_by('-score')[:top_k]
-        
-        return [(rec['paper_id'], rec['score']) for rec in recommendations]
-    
-    def content_based_filtering(self, user_id, top_k=10):
-        """Simple content-based filtering"""
-        user = User.objects.get(id=user_id)
-        
-        # Get user's bookmarked/rated papers
-        user_papers = set()
-        user_papers.update(Bookmark.objects.filter(user=user).values_list('paper_id', flat=True))
-        user_papers.update(Rating.objects.filter(user=user, rating__gte=4).values_list('paper_id', flat=True))
-        
-        if not user_papers:
-            # Return popular papers if no user history
-            popular_papers = Paper.objects.filter(
-                is_approved=True
-            ).order_by('-view_count')[:top_k]
-            return [(paper.id, paper.view_count) for paper in popular_papers]
-        
-        # Get categories of user's papers
-        user_categories = Paper.objects.filter(
-            id__in=user_papers
-        ).values_list('categories__id', flat=True).distinct()
-        
-        # Recommend papers from same categories
-        recommendations = Paper.objects.filter(
-            categories__id__in=user_categories,
-            is_approved=True
-        ).exclude(
-            id__in=user_papers
-        ).annotate(
-            score=Count('categories')
-        ).order_by('-score', '-view_count')[:top_k]
-        
-        return [(paper.id, paper.score) for paper in recommendations]
-    
-    def hybrid_recommendations(self, user_id, top_k=10):
-        """Combine collaborative and content-based filtering"""
-        cf_recs = self.collaborative_filtering(user_id, top_k * 2)
-        cb_recs = self.content_based_filtering(user_id, top_k * 2)
-        
-        # Combine scores with weights
-        combined_scores = {}
-        
-        for paper_id, score in cf_recs:
-            combined_scores[paper_id] = combined_scores.get(paper_id, 0) + 0.6 * score
-        
-        for paper_id, score in cb_recs:
-            combined_scores[paper_id] = combined_scores.get(paper_id, 0) + 0.4 * score
-        
-        # Sort and return top recommendations
-        recommendations = sorted(combined_scores.items(), key=lambda x: x[1], reverse=True)
-        return recommendations[:top_k]
-    
-    def save_recommendations(self, user_id, recommendations):
-        """Save recommendations to database"""
-        user = User.objects.get(id=user_id)
-        
-        # Clear existing recommendations
+            paper_id__in=my_rated, rating__gte=4
+        ).exclude(user=user).values_list('user', flat=True).distinct()
+        recs = Rating.objects.filter(
+            user_id__in=similar_users, rating__gte=4
+        ).exclude(paper_id__in=my_rated).values('paper_id').annotate(score=Count('id'))
+        result = [
+            (Paper.objects.get(id=row['paper_id']), row['score'])
+            for row in recs.order_by('-score')[:top_k]
+        ]
+        return result
+
+    def normalize_scores(self, scores):
+        if not scores:
+            return scores
+        min_s = min(scores.values())
+        max_s = max(scores.values())
+        denom = max_s - min_s if max_s != min_s else 1e-8
+        return {k: (v - min_s) / denom for k, v in scores.items()}
+
+    def hybrid_recommend(self, user, top_k=10, alpha=0.6, beta=0.3, gamma=0.1):
+        content = self.content_based_recommend(user, top_k * 2)
+        collaborative = self.collaborative_filter(user, top_k * 2)
+
+        # Popularity as weighted sum of citation and download counts (ensure properties exist)
+        popularity = {}
+        for paper, _ in content:
+            score = (paper.citation_count * 0.7 if hasattr(paper, 'citation_count') else 0) + \
+                    (paper.download_count * 0.3 if hasattr(paper, 'download_count') else 0)
+            popularity[paper.id] = score
+
+        scores = {}
+
+        for paper, score in content:
+            scores[paper.id] = scores.get(paper.id, 0) + alpha * score
+        for paper, score in collaborative:
+            scores[paper.id] = scores.get(paper.id, 0) + beta * score
+        for pid, pop_score in popularity.items():
+            scores[pid] = scores.get(pid, 0) + gamma * pop_score
+
+        scores = self.normalize_scores(scores)
+        papers = Paper.objects.in_bulk(scores.keys())
+        ranked = sorted(
+            ((papers[pid], score) for pid, score in scores.items()),
+            key=lambda x: x[1],
+            reverse=True
+        )
+        return ranked[:top_k]
+
+    def save_recommendations(self, user, ranked_papers):
         UserRecommendation.objects.filter(user=user).delete()
-        
-        # Save new recommendations
-        for paper_id, score in recommendations:
-            try:
-                paper = Paper.objects.get(id=paper_id)
-                UserRecommendation.objects.create(
-                    user=user,
-                    paper=paper,
-                    score=score,
-                    reason="Recommended based on your reading history and preferences"
-                )
-            except Paper.DoesNotExist:
-                continue
+        for paper, score in ranked_papers:
+            UserRecommendation.objects.create(
+                user=user,
+                paper=paper,
+                score=score,
+                reason="Recommended by improved hybrid model"
+            )
+
+    def generate_for_user(self, user, top_k=10):
+        # It’s better to build embeddings separately on schedule, but kept here for simplicity
+        self.build_embeddings()
+        ranked = self.hybrid_recommend(user, top_k=top_k)
+        self.save_recommendations(user, ranked)
+        return ranked
