@@ -232,7 +232,7 @@ class GroupChatRoomView(ChatRoomView):
     
         return redirect('chat:group_chat', group_id=group_id)
 
-
+@login_required
 def yggdrasil_chatbot_view(request):
     """
     Renders the standalone Yggdrasil chatbot page.

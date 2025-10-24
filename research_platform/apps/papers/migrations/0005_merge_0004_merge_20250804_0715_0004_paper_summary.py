@@ -6,9 +6,9 @@ from django.db import migrations
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('papers', '0004_merge_20250804_0715'),
-        ('papers', '0004_paper_summary'),
+    ('papers', '0004_paper_summary'),
     ]
+
 
     operations = [
     ]
