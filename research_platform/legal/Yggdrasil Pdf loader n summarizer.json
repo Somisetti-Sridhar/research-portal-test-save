@@ -1,0 +1,477 @@
+{
+  "name": "Yggdrasil Pdf loader n summarizer",
+  "nodes": [
+    {
+      "parameters": {
+        "operation": "pdf",
+        "binaryPropertyName": "data0",
+        "options": {}
+      },
+      "id": "66952ff8-faad-4f7e-92dc-6fa70749a572",
+      "name": "Extract Text from PDF",
+      "type": "n8n-nodes-base.extractFromFile",
+      "position": [
+        -5712,
+        944
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "version": 2,
+            "leftValue": "",
+            "caseSensitive": true,
+            "typeValidation": "strict"
+          },
+          "combinator": "and",
+          "conditions": [
+            {
+              "id": "88a7fc31-aac6-4e2f-899e-c250feef5f10",
+              "operator": {
+                "type": "string",
+                "operation": "empty"
+              },
+              "leftValue": "={{ $json.text }}",
+              "rightValue": ""
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "0dc1b36e-8108-4fc2-910e-5c5ec9c5e394",
+      "name": "Check PDF Text Extraction",
+      "type": "n8n-nodes-base.if",
+      "position": [
+        -5488,
+        944
+      ],
+      "typeVersion": 2.2
+    },
+    {
+      "parameters": {
+        "functionCode": "const lang = $json.language?.toLowerCase() || 'english';\nlet code = 'eng';\nif (lang.includes('spanish')) code = 'spa';\nelse if (lang.includes('french')) code = 'fra';\nelse if (lang.includes('german')) code = 'ger';\nreturn { json: { language_code: code } };"
+      },
+      "id": "24f1fbfc-b0a4-445e-b0a4-3c7b5f4748f0",
+      "name": "Map OCR Language Code",
+      "type": "n8n-nodes-base.function",
+      "position": [
+        -5280,
+        768
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.ocr.space/parse/image",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "YOUR_OCR_API_KEY"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "multipart-form-data",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "language",
+              "value": "={{ $json.language_code }}"
+            },
+            {
+              "name": "isOverlayRequired",
+              "value": "false"
+            },
+            {
+              "parameterType": "formBinaryData",
+              "name": "file"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "8c7dfcba-4b6e-4001-9d8e-15398b8c40d6",
+      "name": "OCR Fallback Processing",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [
+        -5104,
+        768
+      ],
+      "typeVersion": 4.2
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "80a0f7dc-ee66-4499-ac84-1e21fca8e6c7",
+              "name": "raw_content",
+              "type": "string",
+              "value": "={{ $json.raw_content || $json.data || $json.text || $json.text_content || $json.ParsedResults?.[0]?.ParsedText || '' }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "2fb98d6c-e18f-4f9c-995c-59c7d83f7a85",
+      "name": "Process Extracted Text",
+      "type": "n8n-nodes-base.set",
+      "position": [
+        -4912,
+        960
+      ],
+      "typeVersion": 3.4
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Summarize: {{ $json.raw_content }}",
+        "options": {
+          "systemMessage": "=You are a precise research-paper summarizer for CS/ML content.\nOUTPUT REQUIREMENTS:\n- Length: 300–400 words (hard cap 420). Prioritize clarity over coverage.\n- Audience: senior CS undergrad/ML practitioner.\n- Tone: neutral, factual; no first person; cite only what appears in text.\n- If a detail is missing, write “Not reported”.\n\nSTRUCTURE (exact headings):\n1) Brief — 2–3 sentences: problem context + what the paper claims.\n2) About it — 8–12 sentences: method (high level), datasets, baselines, key results (with numbers if present), novelty, assumptions, limitations.\n3) Conclusion & Suggestions / Links — 3–5 sentences: practical takeaways, when to use/avoid, 2–4 follow-up reading suggestions (paper sections/keywords/venues), and 1–2 official links if present in the text.\n\nVALIDATION:\n- Do not invent URLs, authors, or numbers.\n- Prefer bullet fragments only if the paper itself uses enumerations.\n- Keep equations/symbols only when essential; avoid LaTeX noise.\n"
+        }
+      },
+      "id": "42c3eb90-1ad0-41f5-9ea0-dacf40025782",
+      "name": "Summarize PDF Content",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "position": [
+        -4592,
+        944
+      ],
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-4.1-mini"
+        },
+        "options": {}
+      },
+      "id": "cefa03c1-3f9c-496a-8e0e-ba4c1679131b",
+      "name": "OpenAI GPT-4.1 (PDF)",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "position": [
+        -4512,
+        1168
+      ],
+      "typeVersion": 1.2,
+      "credentials": {
+        "openAiApi": {
+          "id": "7wJl3jCigro1TPq6",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "name": "content",
+              "type": "string",
+              "value": "={{ $json.output }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "4b004ab9-1157-4efc-8f3b-ab5d0df4efe8",
+      "name": "Format PDF Summary",
+      "type": "n8n-nodes-base.set",
+      "position": [
+        -4240,
+        944
+      ],
+      "typeVersion": 3.4
+    },
+    {
+      "parameters": {
+        "multipleMethods": true,
+        "httpMethod": [
+          "POST"
+        ],
+        "path": "05c364cf-2cdb-4675-8bd0-0993aba6d70f",
+        "responseMode": "responseNode",
+        "options": {
+          "binaryPropertyName": "data"
+        }
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -6000,
+        960
+      ],
+      "id": "ceba5fd9-2fba-4603-95bc-7d5901514167",
+      "name": "Webhook",
+      "webhookId": "05c364cf-2cdb-4675-8bd0-0993aba6d70f"
+    },
+    {
+      "parameters": {
+        "respondWith": "text",
+        "responseBody": "={{ $('Format PDF Summary').item.json.content }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        -3888,
+        976
+      ],
+      "id": "e072a167-f08d-4f67-af8a-7befb88445f8",
+      "name": "Respond to Webhook1"
+    },
+    {
+      "parameters": {
+        "dataType": "binary",
+        "options": {}
+      },
+      "id": "6de715b6-0035-426a-9de1-d86c9d08b0ec",
+      "name": "Default Data Loader",
+      "type": "@n8n/n8n-nodes-langchain.documentDefaultDataLoader",
+      "position": [
+        -5568,
+        1552
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "chunkSize": 200,
+        "chunkOverlap": 50,
+        "options": {}
+      },
+      "id": "259e0b67-e7aa-48a3-8383-7aef5937b982",
+      "name": "Recursive Character Text Splitter",
+      "type": "@n8n/n8n-nodes-langchain.textSplitterRecursiveCharacterTextSplitter",
+      "position": [
+        -5584,
+        1712
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.embeddingsOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        -5696,
+        1488
+      ],
+      "id": "996fd5fc-8b26-43ce-b17a-a72daca7b3fe",
+      "name": "Embeddings OpenAI",
+      "credentials": {
+        "openAiApi": {
+          "id": "7wJl3jCigro1TPq6",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "text",
+        "responseBody": "Uploaded sucessfully",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        -5280,
+        1904
+      ],
+      "id": "2beb1dc9-db0d-49fc-b186-1ef4ec6646cd",
+      "name": "Respond to Webhook"
+    },
+    {
+      "parameters": {
+        "mode": "insert",
+        "qdrantCollection": {
+          "__rl": true,
+          "value": "2276f628-67e3-4350-b4d6-c89c653c3be5",
+          "mode": "id"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.vectorStoreQdrant",
+      "typeVersion": 1.3,
+      "position": [
+        -5696,
+        1312
+      ],
+      "id": "97c62d4c-d50b-41fa-8abc-5f0bf5c11191",
+      "name": "Qdrant Vector Store",
+      "credentials": {
+        "qdrantApi": {
+          "id": "LRg4MYpsuPweVZCf",
+          "name": "QdrantApi account 4"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Format PDF Summary": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI GPT-4.1 (PDF)": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Summarize PDF Content",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract Text from PDF": {
+      "main": [
+        [
+          {
+            "node": "Check PDF Text Extraction",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Map OCR Language Code": {
+      "main": [
+        [
+          {
+            "node": "OCR Fallback Processing",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Summarize PDF Content": {
+      "main": [
+        [
+          {
+            "node": "Format PDF Summary",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Process Extracted Text": {
+      "main": [
+        [
+          {
+            "node": "Summarize PDF Content",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OCR Fallback Processing": {
+      "main": [
+        [
+          {
+            "node": "Process Extracted Text",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check PDF Text Extraction": {
+      "main": [
+        [
+          {
+            "node": "Map OCR Language Code",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Process Extracted Text",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Extract Text from PDF",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Qdrant Vector Store",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Default Data Loader": {
+      "ai_document": [
+        [
+          {
+            "node": "Qdrant Vector Store",
+            "type": "ai_document",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Recursive Character Text Splitter": {
+      "ai_textSplitter": [
+        [
+          {
+            "node": "Default Data Loader",
+            "type": "ai_textSplitter",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Embeddings OpenAI": {
+      "ai_embedding": [
+        [
+          {
+            "node": "Qdrant Vector Store",
+            "type": "ai_embedding",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "b3e964df-7067-4122-aa69-ed435ba62c83",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "6f82c4a36db8ca39cc85b6d85db9d108f8612e95a673b45230511384bacd9001"
+  },
+  "id": "KUqMPGdaYQGWZ4Pe",
+  "tags": []
+}
