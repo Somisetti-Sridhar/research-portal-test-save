@@ -3,6 +3,119 @@
 {% block title %}Upload Paper - Research Platform{% endblock %}
 
 {% block content %}
+<style>
+    .upload-overlay {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.8);
+        backdrop-filter: blur(10px);
+        z-index: 9999;
+        justify-content: center;
+        align-items: center;
+    }
+
+    .upload-overlay.active {
+        display: flex;
+    }
+
+    .upload-spinner {
+        text-align: center;
+        color: white;
+    }
+
+    .spinner-border {
+        width: 4rem;
+        height: 4rem;
+        border-width: 0.4rem;
+    }
+
+    .upload-text {
+        margin-top: 1.5rem;
+        font-size: 1.2rem;
+        font-weight: 500;
+    }
+
+    .upload-subtext {
+        margin-top: 0.5rem;
+        font-size: 0.9rem;
+        opacity: 0.8;
+    }
+
+    .progress-container {
+        width: 350px;
+        margin: 1.5rem auto 0;
+    }
+
+    .progress {
+        height: 30px;
+        background-color: rgba(255, 255, 255, 0.3);
+        border-radius: 15px;
+        overflow: hidden;
+        border: 2px solid rgba(255, 255, 255, 0.5);
+    }
+
+    .progress-bar {
+        height: 100%;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        transition: width 0.3s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-weight: 700;
+        font-size: 1rem;
+        box-shadow: 0 2px 10px rgba(102, 126, 234, 0.5);
+    }
+
+    .upload-percentage {
+        margin-top: 1rem;
+        font-size: 2rem;
+        font-weight: 700;
+        color: white;
+        text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+    }
+
+    .pdf-file-info {
+        display: none;
+        margin-top: 0.5rem;
+        padding: 0.75rem;
+        background: #f8f9fa;
+        border: 1px solid #dee2e6;
+        border-radius: 8px;
+        color: #000;
+    }
+
+    .pdf-file-info.show {
+        display: block;
+    }
+
+    .pdf-file-info i {
+        color: #000;
+        margin-right: 0.5rem;
+    }
+</style>
+
+<!-- Loading Overlay -->
+<div class="upload-overlay" id="uploadOverlay">
+    <div class="upload-spinner">
+        <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">Loading...</span>
+        </div>
+        <div class="upload-text">Uploading PDF...</div>
+        <div class="upload-percentage" id="uploadPercentage">0%</div>
+        <div class="progress-container">
+            <div class="progress">
+                <div class="progress-bar" id="progressBar" role="progressbar" style="width: 0%">0%</div>
+            </div>
+        </div>
+        <div class="upload-subtext">Please wait while we process your file</div>
+    </div>
+</div>
+
 <div class="row justify-content-center">
     <div class="col-md-8">
         <div class="card">
@@ -10,7 +123,7 @@
                 <h3>Upload Research Paper</h3>
             </div>
             <div class="card-body">
-                <form method="post" enctype="multipart/form-data">
+                <form method="post" enctype="multipart/form-data" id="uploadForm">
                     {% csrf_token %}
                     <div class="mb-3">
                         <label for="{{ form.title.id_for_label }}" class="form-label">Title</label>
@@ -41,16 +154,114 @@
                     <div class="mb-3">
                         <label for="{{ form.pdf_path.id_for_label }}" class="form-label">PDF File</label>
                         {{ form.pdf_path }}
+                        <div class="pdf-file-info" id="pdfFileInfo">
+                            <i class="fas fa-file-pdf"></i>
+                            <span id="pdfFileName"></span>
+                            <span id="pdfFileSize" class="ms-2"></span>
+                        </div>
                     </div>
                     <div class="mb-3">
                         <label class="form-label">Categories</label>
                         {{ form.categories }}
                     </div>
-                    <button type="submit" class="btn btn-primary">Upload Paper</button>
+                    <button type="submit" class="btn btn-primary" id="submitBtn">
+                        <i class="fas fa-cloud-upload-alt me-2"></i>Upload Paper
+                    </button>
                     <a href="{% url 'papers:list' %}" class="btn btn-secondary">Cancel</a>
                 </form>
             </div>
         </div>
     </div>
 </div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const form = document.getElementById('uploadForm');
+        const overlay = document.getElementById('uploadOverlay');
+        const submitBtn = document.getElementById('submitBtn');
+        const pdfInput = document.querySelector('input[type="file"]');
+        const pdfFileInfo = document.getElementById('pdfFileInfo');
+        const pdfFileName = document.getElementById('pdfFileName');
+        const pdfFileSize = document.getElementById('pdfFileSize');
+
+        // Show file info when PDF is selected
+        if (pdfInput) {
+            pdfInput.addEventListener('change', function(e) {
+                if (this.files && this.files[0]) {
+                    const file = this.files[0];
+                    const fileSize = (file.size / (1024 * 1024)).toFixed(2);
+                    
+                    pdfFileName.textContent = file.name;
+                    pdfFileSize.textContent = `(${fileSize} MB)`;
+                    pdfFileInfo.classList.add('show');
+                } else {
+                    pdfFileInfo.classList.remove('show');
+                }
+            });
+        }
+
+        // Show loading overlay on form submit with progress
+        form.addEventListener('submit', function(e) {
+            // Check if PDF file is selected
+            if (pdfInput && pdfInput.files && pdfInput.files[0]) {
+                e.preventDefault();
+                
+                console.log('Form submitted, showing overlay');
+                overlay.classList.add('active');
+                submitBtn.disabled = true;
+                submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Uploading...';
+
+                const formData = new FormData(form);
+                const xhr = new XMLHttpRequest();
+                const progressBar = document.getElementById('progressBar');
+                const uploadPercentage = document.getElementById('uploadPercentage');
+
+                console.log('Progress elements:', progressBar, uploadPercentage);
+
+                // Track upload progress
+                xhr.upload.addEventListener('progress', function(e) {
+                    if (e.lengthComputable) {
+                        const percentComplete = Math.round((e.loaded / e.total) * 100);
+                        console.log('Upload progress:', percentComplete + '%');
+                        progressBar.style.width = percentComplete + '%';
+                        progressBar.textContent = percentComplete + '%';
+                        uploadPercentage.textContent = percentComplete + '%';
+                    }
+                });
+
+                // Handle completion
+                xhr.addEventListener('load', function() {
+                    if (xhr.status === 200 || xhr.status === 302) {
+                        progressBar.style.width = '100%';
+                        progressBar.textContent = '100%';
+                        uploadPercentage.textContent = '100%';
+                        
+                        // Redirect or reload after a short delay
+                        setTimeout(function() {
+                            window.location.href = xhr.responseURL || "{% url 'papers:list' %}";
+                        }, 500);
+                    } else {
+                        alert('Upload failed. Please try again.');
+                        overlay.classList.remove('active');
+                        submitBtn.disabled = false;
+                        submitBtn.innerHTML = '<i class="fas fa-cloud-upload-alt me-2"></i>Upload Paper';
+                    }
+                });
+
+                // Handle errors
+                xhr.addEventListener('error', function() {
+                    alert('Upload failed. Please check your connection and try again.');
+                    overlay.classList.remove('active');
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = '<i class="fas fa-cloud-upload-alt me-2"></i>Upload Paper';
+                });
+
+                // Send the request
+                xhr.open('POST', form.action);
+                xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
+                xhr.send(formData);
+            }
+        });
+    });
+</script>
 {% endblock %}

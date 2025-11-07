@@ -1,0 +1,661 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Legal Information - Research Portal</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            line-height: 1.6;
+            color: #d1d1d1;
+            background-color: #1a1a2e;
+            background-image: linear-gradient(180deg, #1a1a2e 0%, #2c2a4a 100%);
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            max-width: 900px;
+            margin: 40px auto;
+            background-color: rgba(26, 26, 46, 0.6);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+        }
+        .main-heading {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+            text-align: center;
+            margin-bottom: 1em;
+        }
+        .heading-icon {
+            width: 45px;
+            height: 45px;
+            flex-shrink: 0; /* Prevents icon from shrinking */
+        }
+        h1, h2, h3 {
+            color: #ffffff;
+            border-bottom: 1px solid rgba(138, 124, 255, 0.5);
+            padding-bottom: 10px;
+            margin-top: 1.5em;
+        }
+        h1 {
+            border-bottom: none;
+            margin: 0;
+            padding: 0;
+            font-size: 2.2em; /* Adjusted font size for better fit */
+        }
+        h1 a:hover {
+            color: #ff57ac !important;
+            text-decoration: underline !important;
+        }
+        .project-meta {
+            text-align: center;
+            color: #cccccc;
+            margin-bottom: 2em;
+        }
+        .project-meta a {
+            color: #ff57ac;
+            text-decoration: none;
+            font-weight: bold;
+        }
+        .project-meta a:hover {
+            text-decoration: underline;
+        }
+        .contact-list {
+            list-style: none;
+            padding: 0;
+        }
+        .contact-list li {
+            margin-bottom: 15px;
+            padding: 15px;
+            border-left: 4px solid #8a7cff;
+            background-color: rgba(0, 0, 0, 0.2);
+            border-radius: 5px;
+        }
+        .contact-list li.primary-contact {
+            border-left-color: #ff57ac;
+        }
+        .contact-list strong {
+            display: block;
+            margin-bottom: 5px;
+            color: #ffffff;
+        }
+        details {
+            margin-bottom: 1em;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            overflow: hidden; 
+        }
+        summary {
+            font-weight: bold;
+            font-size: 1.2em;
+            padding: 15px;
+            cursor: pointer;
+            background-color: rgba(44, 42, 74, 0.8);
+            color: #ffffff;
+            outline: none;
+        }
+        .document-content {
+            padding: 20px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            background-color: rgba(0, 0, 0, 0.15);
+        }
+        .document-content.faq-answer {
+            padding: 15px;
+        }
+        .document-content pre {
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            font-family: inherit;
+            margin: 0;
+            color: #d1d1d1;
+        }
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+        }
+        .info-card {
+            background: rgba(0, 0, 0, 0.2);
+            padding: 20px;
+            border-radius: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            position: relative;
+            overflow: hidden;
+        }
+        .card-content {
+            transition: filter 0.3s, opacity 0.3s;
+        }
+        .info-card:hover .card-content {
+            filter: blur(4px);
+            opacity: 0.5;
+        }
+        .card-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            gap: 15px;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s;
+        }
+        .info-card:hover .card-overlay {
+            opacity: 1;
+            pointer-events: auto;
+        }
+        .link-button {
+            background-color: #ff57ac;
+            color: #fff;
+            padding: 10px 20px;
+            border-radius: 5px;
+            text-decoration: none;
+            font-weight: bold;
+            border: 1px solid #ff57ac;
+            transition: background-color 0.3s, color 0.3s;
+            width: 120px;
+            text-align: center;
+        }
+        .link-button:hover {
+            background-color: transparent;
+            color: #ff57ac;
+        }
+        .info-card h3 {
+            margin-top: 0;
+            padding-bottom: 5px;
+            font-size: 1.2em;
+            border-bottom: none;
+        }
+        .info-card .role-title {
+            font-weight: bold;
+            color: #ff57ac;
+            display: block;
+            margin-bottom: 10px;
+            font-size: 1em;
+        }
+        .info-card p {
+            font-size: 0.9em;
+            color: #d1d1d1;
+            margin: 0;
+        }
+        .changelog-list {
+            list-style: none;
+            padding-left: 0;
+        }
+        .changelog-list li {
+            background-color: rgba(0,0,0,0.2);
+            padding: 10px 15px;
+            border-radius: 5px;
+            margin-bottom: 8px;
+        }
+        footer {
+            text-align: center;
+            padding: 30px 20px;
+            margin-top: 40px;
+            border-top: 1px solid rgba(138, 124, 255, 0.5);
+            color: #b0b0b0;
+        }
+        footer p {
+            margin: 5px 0;
+            font-size: 0.9em;
+        }
+        footer p:last-child {
+            font-size: 0.8em;
+            opacity: 0.8;
+        }
+        footer a {
+            color: inherit;
+            text-decoration: none;
+            transition: color 0.3s;
+        }
+        footer a:hover {
+            color: #ff57ac;
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <div class="main-heading">
+            <svg class="heading-icon" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                <defs>
+                    <linearGradient id="pinkGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" style="stop-color:#F977CE;stop-opacity:1" />
+                        <stop offset="100%" style="stop-color:#F54EA2;stop-opacity:1" />
+                    </linearGradient>
+                </defs>
+                <path fill="url(#pinkGradient)" d="M50,15 L5,35 L50,55 L95,35 L50,15 Z M10,62.5 L10,40 L47.5,60 L47.5,82.5 L10,62.5 Z M52.5,82.5 L52.5,60 L90,40 L90,62.5 L52.5,82.5 Z" />
+                <path fill="url(#pinkGradient)" d="M30,32.5 C25,45 25,55 35,57.5 L40,50 C35,47.5 35,40 37.5,30 L30,32.5 Z" opacity="0.9" />
+            </svg>
+            <h1><a href="/" style="color: inherit; text-decoration: none;">Research Portal</a> - Legal & Project Information</h1>
+        </div>
+        <p class="project-meta">
+            A non-commercial, student-developed, open-source platform. <br>
+            Website: <a href="https://orravyn.cloud" target="_blank">https://orravyn.cloud</a>
+            Open Source link: <a href="https://github.com/Somisetti-Sridhar/research-portal-test-save" target="_blank">https://github.com/Somisetti-Sridhar/research-portal-test-save</a>
+        </p>
+        
+        <section id="overview">
+            <h2>Project Overview</h2>
+            <p>The Research Portal is a student-developed, open-source academic platform designed to facilitate research sharing and collaboration among students, researchers, and educators. The mission is to enhance academic collaboration while safeguarding user data and respecting research integrity. The platform is provided "as is" and intended strictly for educational and non-commercial use.</p>
+        </section>
+
+        <section id="open-source">
+            <h2>Open Source & Community</h2>
+            <p>This platform is built on open-source principles, with all code governed by the Apache License 2.0. We are committed to transparency and plan to make the source code repository public for community contributions in the future.</p>
+        </section>
+        
+        <section id="contact">
+            <h2>Contact Information</h2>
+            <p>For all general inquiries, please contact our primary support email first. The expected response time is 48 to 72 hours.</p>
+            <ul class="contact-list">
+                <li class="primary-contact">
+                    <strong>Primary Support Email</strong>
+                    seraphyl@orravyn.cloud
+                </li>
+            </ul>
+        </section>
+
+        <section id="our-team">
+            <h2>Our Team (Founders)</h2>
+            <p>This project was conceptualized, designed, and developed entirely by its three founding members.</p>
+            <div class="info-grid">
+                <div class="info-card">
+                    <div class="card-content">
+                        <h3>Sridhar Somisetti</h3>
+                        <span class="role-title">Founder & CTO</span>
+                        <p>Responsible for system architecture, Backend API development, AI/ML Engineer, Database design, Privacy compliance.</p>
+                    </div>
+                    <div class="card-overlay">
+                        <a href="https://www.linkedin.com/in/-sridhar-" class="link-button" target="_blank">LinkedIn</a>
+                        <a href="https://sridhar.orravyn.cloud" class="link-button" target="_blank">Portfolio</a>
+                    </div>
+                </div>
+                <div class="info-card">
+                    <div class="card-content">
+                        <h3>Sai Rama Linga Reddy Maruri</h3>
+                        <span class="role-title">Co-Founder & CEO</span>
+                        <p>Responsible for team coordination, Embeddings generation, NLP, Summarization, Yggradrasil, AI enginner, Ai architect of project.</p>
+                    </div>
+                    <div class="card-overlay">
+                        <a href="https://www.linkedin.com/in/sairam-maruri" class="link-button" target="_blank">LinkedIn</a>
+                        <a href="https://sairam.orravyn.cloud" class="link-button" target="_blank">Portfolio</a>
+                    </div>
+                </div>
+                <div class="info-card">
+                    <div class="card-content">
+                        <h3>Ram Charan Bharma</h3>
+                        <span class="role-title">Co-Founder & CPO</span>
+                        <p>Responsible for user interface, Interface usability, Data Collection, Data Orchestration, Data Compliance, Issues resolver, Support team head.</p>
+                    </div>
+                    <div class="card-overlay">
+                        <a href="https://www.linkedin.com/in/ram-charan99" class="link-button" target="_blank">LinkedIn</a>
+                        <a href="#" class="link-button" target="_blank">Portfolio</a>
+                    </div>
+                </div>
+            </div>
+        </section>
+        
+        <section id="legal-summary">
+             <h2>Governing Law & Licensing</h2>
+             <div class="info-grid">
+                <div class="info-card">
+                    <h3>Governing Law</h3>
+                    <p>This Agreement and any disputes arising from it shall be governed by the laws of India.</p>
+                </div>
+                <div class="info-card">
+                    <h3>Jurisdiction</h3>
+                    <p>Any disputes will be subject to the exclusive jurisdiction of the courts located in India.</p>
+                </div>
+                <div class="info-card">
+                    <h3>Platform Licensing</h3>
+                    <p>The platform's source code is released and maintained under the Apache License 2.0.</p>
+                </div>
+             </div>
+        </section>
+        
+        <section id="changelog">
+            <h2>Policy Changelog</h2>
+            <p>Any future updates to our legal documents will be noted here. The current versions are:</p>
+            <ul class="changelog-list">
+                <li><strong>Privacy Policy v1.0:</strong> Effective August 4, 2025.</li>
+                <li><strong>Terms and Conditions v1.0:</strong> Effective August 4, 2025.</li>
+                <li><strong>User Liability Agreement v1.0:</strong> Effective August 4, 2025.</li>
+                <li><strong>Legal Disclaimer v1.0:</strong> Effective August 4, 2025.</li>
+            </ul>
+        </section>
+
+        <section id="legal-documents">
+            <h2>Legal Documentation</h2>
+            
+            <details>
+                <summary>Privacy Policy</summary>
+                <div class="document-content">
+                    <pre>
+Privacy Policy
+Research Portal
+Website: https://orravyn.cloud
+Effective Date: August 4, 2025
+Version: 1.0
+Next Review: August 8, 2026
+License: Open-source, Apache License 2.0
+Project Type: Non-commercial educational research platform
+
+Overview
+The Research Portal is a student-developed, open-source academic platform created to facilitate research sharing and academic collaboration. It is strictly non-commercial and developed using open-source technologies. The platform provides an accessible environment for students, researchers, and educators to upload, explore, and collaborate on academic research content. It is built with privacy, transparency, and educational integrity at its core, and all functionality is designed with privacy-by-design principles.
+
+Purpose and Mission
+The platform is intended solely for educational and academic purposes. It supports the ethical sharing of research materials and promotes open access to scholarly content. The mission is to enhance academic collaboration while safeguarding user data and respecting research integrity.
+
+Platform Ownership
+The Research Portal is maintained by independent student developers. The primary developer and point of contact is Sridhar Somisetti at sridharsomisettiwork@gmail.com. Co-developers include Sairam Maruri at sairam.maruri@gmail.com, and Ram Charan Barma at ramcharanbarma99@gmail.com. All contributors are committed to maintaining user privacy and ensuring data security in line with best practices.
+
+Data Collection and Use
+User accounts may include data such as email addresses, usernames, affiliations, and optional profile information. This data is collected solely for authentication and academic networking purposes. User consent is required for data collection, and retention is limited to the active duration of the account plus one year. Users may upload research papers along with associated metadata and version history. This data is used to support academic sharing and collaboration. Ownership and control of uploaded content remain with the user, and such data is retained permanently unless removed by the user. AI-powered features on the platform utilize anonymized search queries and behavioral data to improve recommendation systems and interface functionality. If a user is using this platform, they have given consent.
+
+Data Protection and Security
+The platform employs modern technical and organizational security measures. HTTPS is enforced across the entire website, and passwords are securely hashed. Access to administrative functionality is role-restricted. Encrypted storage is used for all documents. Code reviews are conducted regularly to ensure compliance with privacy standards.
+
+Privacy Principles
+The platform adheres to several core privacy principles. All data is used solely for educational purposes. No personal data is exploited for commercial gain or advertising. The platform is open source and community-developed, and improvements are made exclusively to serve academic interests. Only essential data is collected, and no third-party trackers or advertising integrations are included. Users have full control over document visibility, and optional profile fields are not required. Users retain the right to access, correct, export, or delete their data at any time. All research uploads and account settings are fully user-controlled. Cookies are limited to essential session cookies required for secure login.
+
+User Rights and Access
+Users can access and export all personal data and uploaded research materials. Assistance with data migration is available upon request. Users also have the ability to correct personal information, delete accounts, or remove individual documents. The platform respects user control over their academic content and associated metadata.
+
+International and National Compliance
+The platform follows relevant international and national data protection frameworks. It is designed in accordance with the General Data Protection Regulation (GDPR) of the European Union and the Digital Personal Data Protection Act, 2023 of India. Users have access to their personal data and may correct or delete their information where applicable. As an open-source, student-maintained academic platform, the system does not provide formal mechanisms for raising legal disputes or initiating cross-border data complaints. By using the platform, users acknowledge that it is non-commercial, community-driven, and does not offer structured legal support channels.
+
+Third-Party Services and Infrastructure
+The platform uses open-source technologies including Django, MySQL, SQLite, Scikit-learn, TensorFlow, HTML, CSS, and JavaScript. All hosting infrastructure providers are selected based on their compliance with applicable data protection laws. No user data is shared with any third-party services without explicit user consent. All third-party tools used are strictly for non-commercial, educational infrastructure support.
+
+Content Sourcing and Licensing
+The Research Portal hosts academic research papers obtained exclusively from open-access repositories and other public domain scholarly platforms. All documents made available through the platform are either open-access by license or released under terms that permit reuse and redistribution for educational purposes. No proprietary or restricted-access content is hosted or distributed. Users are expected to upload only content they have the legal right to share, and the platform enforces academic licensing integrity. All software tools and libraries used in development are retained under their original licenses. The platform codebase, including all enhancements, is released under the Apache License 2.0 to ensure transparency and encourage community development.
+
+Risk Management
+Platform risk is low due to its non-commercial mission, transparent codebase, and minimal data collection. AI functionalities are clearly disclosed, and users opt in with informed consent. All data handling practices conform to international compliance frameworks. Encrypted communication and secure authentication help reduce operational risk.
+
+User Support
+For all privacy or platform-related inquiries, please first contact:
+seraphyl@orravyn.cloud
+
+Additional support is available from:
+Sridhar Somisetti at sridharsomisettiwork@gmail.com.
+Sairam Maruri at sairam.maruri@gmail.com.
+Ram Charan Barma at ramcharanbarma99@gmail.com.
+The standard response time for support queries is 48 to 72 hours.
+
+Future Enhancements
+Planned improvements include integration of multi-factor authentication, development of a user privacy dashboard, and expansion of the user forum and community management tools. These features are intended to enhance transparency, user control, and platform security.
+
+Commitment to Privacy
+The Research Portal is a transparent, secure, and ethical academic platform designed to promote open-access research collaboration. It is maintained by student developers who prioritize data protection, user control, and compliance with national and international laws. The platform conducts regular reviews of its privacy practices, welcomes feedback from its user base, and is committed to ongoing improvement and accountability.
+                    </pre>
+                </div>
+            </details>
+            
+            <details>
+                <summary>Terms and Conditions</summary>
+                <div class="document-content">
+                    <pre>
+Terms and Conditions
+Research Portal
+Website: https://orravyn.cloud
+Effective Date: August 4, 2025
+Version: 1.0
+
+1. Acceptance of Terms
+By accessing or using the Research Portal, you agree to comply with and be legally bound by these Terms and Conditions. If you do not agree to any of these terms, you must not use the platform. Continued use of the platform constitutes acceptance of the most recent version of these terms.
+
+2. Purpose of the Platform
+The Research Portal is a student-developed, open-source academic platform provided for non-commercial, educational, and research collaboration purposes only. It is intended for students, researchers, educators, and academic contributors to share and explore open-access research content.
+
+3. User Eligibility and Accounts
+Users must be at least 16 years old or have institutional permission to access and use the platform. By creating an account, you confirm that the information you provide is accurate and that you are legally permitted to use the platform under applicable laws. Users are responsible for maintaining the confidentiality of their login credentials and for all activities under their account.
+
+4. Non-Commercial Use
+The platform and all its services are offered exclusively for non-commercial academic use. No content, service, or feature of the Research Portal may be used for profit, resale, or advertising. Any attempt to commercialize platform content or features is strictly prohibited.
+
+5. User Responsibilities
+You are responsible for all content you upload or share via the platform. This includes ensuring that you have the legal right to upload such content and that it does not violate copyright, intellectual property rights, academic ethics, or applicable law. Content must not include any offensive, harmful, plagiarized, or misleading material.
+
+6. Content Licensing and Ownership
+All content hosted by the Research Portal is either (a) uploaded by users with appropriate rights or (b) collected from open-access sources under licenses that permit redistribution. Users retain ownership of their original uploads but grant the platform a non-exclusive, royalty-free license to store, display, and distribute that content for academic purposes. All reused and third-party open-source content, tools, libraries, and frameworks used in development are preserved under their respective licenses. The platform itself, including its source code and enhancements, is released and maintained under the Apache License 2.0.
+
+7. AI-Powered Features
+The platform includes optional AI-based features such as search optimization, document recommendations, and usage analytics, which are designed to enhance the academic user experience. By using the platform, users automatically provide consent for the collection and use of anonymized usage data, as outlined in the Privacy Policy.
+
+8. Platform Availability and Modifications
+The platform is provided “as is” without warranties of any kind. The development team reserves the right to modify, suspend, or discontinue any aspect of the service at any time without prior notice. While best efforts are made to ensure uptime and security, no guarantee is made of uninterrupted access or error-free operation.
+
+9. Privacy and Data Use
+Your use of the platform is also governed by the Research Portal Privacy Policy, which outlines how personal data, research uploads, and usage information are collected, processed, stored, and protected. By using the platform, you agree to the terms of the Privacy Policy.
+
+10. Intellectual Property and Copyright
+You must not upload or share content that infringes upon the intellectual property rights of others. You agree to indemnify the platform and its developers against any claim related to your violation of copyright or intellectual property laws. If you believe content on the platform violates your rights, please contact the support team for prompt removal or correction.
+
+11. Compliance with Laws
+You agree to use the platform in accordance with all applicable laws and regulations, including but not to international academic standards, the Digital Personal Data Protection Act (India), and the General Data Protection Regulation (GDPR) where applicable.
+
+12. Termination of Use
+The platform reserves the right to suspend or terminate your account at its sole discretion, with or without notice, in cases of suspected misuse, violation of these terms, or legal requirement. Users may delete their account and all associated data at any time through the provided developer contact.
+
+13. Limitation of Liability
+To the fullest extent permitted by law, the developers and maintainers of the Research Portal shall not be liable for any direct, indirect, incidental, or consequential damages resulting from the use or inability to use the platform or any of its features.
+
+14. Changes to the Terms
+These Terms and Conditions may be updated periodically. Any changes will be reflected on this page along with a revised effective date. Continued use of the platform after such updates constitutes acceptance of the revised terms.
+
+15. Contact Information
+For questions, feedback, or legal concerns, please first contact:
+seraphyl@orravyn.cloud
+
+Additional contacts:
+Sridhar Somisetti
+Email: sridharsomisettiwork@gmail.com
+
+Sairam Maruri
+Email: sairam.maruri@gmail.com
+
+Ram Charan Barma
+Email: ramcharanbarma99@gmail.com
+                        
+Expected response time is 48 to 72 hours.
+                    </pre>
+                </div>
+            </details>
+
+            <details>
+                <summary>User Liability Agreement</summary>
+                <div class="document-content">
+                    <pre>
+User Liability Agreement
+Research Portal
+Website: https://orravyn.cloud
+Effective Date: August 4, 2025
+Version: 1.0
+
+1. Introduction
+This User Liability Agreement (“Agreement”) governs your responsibilities and liabilities as a user of the Research Portal. By accessing or using the platform, you agree to be legally bound by the terms of this Agreement. If you do not agree with any part of this Agreement, you must not use the platform.
+
+2. Scope and Purpose
+The Research Portal is an open-source, student-developed, non-commercial platform for academic research sharing and collaboration. It is intended strictly for educational and research use. This Agreement outlines your legal obligations as a user and sets forth the limitations of liability for the platform and its developers.
+
+3. Accurate Information
+You agree to provide accurate, complete, and current information when registering for an account or uploading content. You are solely responsible for maintaining the confidentiality of your credentials and for all activity under your account.
+
+4. Content Upload Responsibility
+If you upload or share documents, metadata, or any other form of content, you acknowledge and affirm that:
+- You own the content or have obtained explicit legal rights or licenses to distribute it
+- The content is accurate and does not misrepresent academic authorship or contributions
+- The content does not contain malicious code, copyright infringement, or unauthorized materials
+- You comply with the terms of any original license (such as Creative Commons or repository-specific licensing)
+You assume full liability for any legal or academic consequences resulting from the content you upload or distribute through the platform.
+
+5. Use of Platform Features
+You agree not to misuse the platform, including but not to:
+- Attempting to reverse engineer, disrupt, or compromise the security or functionality of the platform
+- Using automated systems (bots, scrapers) without authorization
+- Uploading content that promotes plagiarism, misinformation, or academic dishonesty
+- Bypassing any access controls or data protection mechanisms
+Violation of these provisions may result in suspension or permanent termination of access.
+
+6. Data and Privacy Obligations
+You agree to the use of your data as described in the platform’s Privacy Policy. You acknowledge that anonymized data may be be used for improving AI-powered features and platform analytics. You are responsible for protecting your own data and must not share personal information of others without consent.
+
+7. No Commercial Use
+You agree not to use the platform or any of its content for commercial gain, resale, advertisement, or any business activity. The platform is intended solely for nonprofit academic collaboration.
+
+8. Indemnification
+You agree to indemnify and hold harmless the platform’s developers and maintainers from any claims, damages, liabilities, or legal expenses arising from your use of the platform, including but not to violations of intellectual property rights, defamation, unlawful activity, or breach of this Agreement.
+
+9. Disclaimer of Warranties
+The Research Portal is provided “as is” and “as available.” The platform makes no guarantees regarding the accuracy, availability, performance, or suitability of its services or content. You acknowledge that you use the platform at your own risk and that the developers are not responsible for any academic, professional, or legal consequences that result from reliance on platform content.
+
+10. Limitation of Liability
+To the maximum extent permitted by law, the platform’s developers and maintainers shall not be liable for any indirect, incidental, special, or consequential damages, including data loss or service disruption, arising from your use or inability to use the platform.
+
+11. Termination of Access
+The platform may suspend, restrict, or permanently terminate your access without prior notice if you violate this Agreement or applicable laws. Users may voluntarily delete their accounts and content at any time by contacting developers.
+
+12. Governing Law and Jurisdiction
+This Agreement shall be governed by the laws of India. Any disputes arising under this Agreement shall be subject to the exclusive jurisdiction of the courts located in India.
+
+13. Acknowledgment and Acceptance
+By using the Research Portal, you confirm that you have read, understood, and agreed to all the terms and conditions of this User Liability Agreement.
+
+14. Contact Information
+For legal inquiries, account-related matters, or content disputes, please first contact:
+seraphyl@orravyn.cloud
+
+Additional contacts:
+Sridhar Somisetti
+Email: sridharsomisettiwork@gmail.com
+
+Sairam Maruri
+Email: sairam.maruri@gmail.com
+
+Ram Charan Barma
+Email: ramcharanbarma99@gmail.com
+
+                    </pre>
+                </div>
+            </details>
+
+            <details>
+                <summary>Legal Disclaimer</summary>
+                <div class="document-content">
+                    <pre>
+Legal Disclaimer
+Research Portal
+Website: https://orravyn.cloud
+Effective Date: August 4, 2025
+Version: 1.0
+
+1. No Legal Advice or Professional Guarantee
+The information, content, services, and resources provided by the Research Portal are intended solely for educational and research purposes. Nothing presented on or through this platform constitutes legal or professional advice. Users are responsible for verifying the accuracy, completeness, and applicability of all content before relying on it for any scholarly or practical use.
+
+2. Open-Source and Non-Commercial Nature
+The Research Portal is a non-commercial, student-developed open-source project. It is maintained on a best-effort basis without warranties of any kind. All code, features, and academic resources are provided "as is" under the Apache License 2.0. There is no express or implied warranty of fitness for a particular purpose, merchantability, or non-infringement.
+
+3. Content Liability
+All research papers uploaded by users or sourced from open-access repositories are provided for academic sharing only. The platform does not guarantee the accuracy, originality, or compliance of any uploaded content. Responsibility for verifying the legitimacy and copyright status of content rests with the uploading user. If you believe any content on the platform violates your rights or applicable law, please report it to the development team for review. We aim to respond to such notices within 72 hours.
+
+4. AI Features and Data Use
+Certain features on the Research Portal may involve automated systems, including anonymized data analysis and AI-driven recommendations. These features are experimental and subject to ongoing development. The platform is not liable for any decisions, outcomes, or conclusions drawn from AI-generated outputs. All AI use is governed by user consent and the platform’s Privacy Policy.
+
+5. External Links and Third-Party Services
+The platform may include links to external academic repositories or open-source libraries. These are provided solely for user convenience and do not imply endorsement. The Research Portal is not responsible for the content, data practices, or legal terms of any third-party sites or services.
+
+6. No Commercial Relationship
+Use of the Research Portal does not create any commercial, contractual, academic, or professional relationship between users and the platform developers. The portal does not sell products or services and does not enter into contracts for consideration with users.
+
+7. Jurisdiction and Governing Law
+This platform is maintained by individuals based in India. Use of the platform is subject to the laws of India, including the Digital Personal Data Protection Act, 2023. Where applicable, international laws such as the General Data Protection Regulation (GDPR) are respected in the handling of user data. By accessing the platform, you agree to submit to the exclusive jurisdiction of Indian courts in any legal matter concerning the platform.
+
+8. Intellectual Property and Licensing
+All platform code is released under the Apache License 2.0. Users are free to view, modify, and reuse the code in accordance with the terms of that license. Content sourced from open-access repositories remains subject to its original licensing terms. Users must not redistribute or repurpose any materials beyond what is permitted under the relevant open-source or academic license.
+
+9. Indemnification
+By using the Research Portal, you agree to indemnify and hold harmless its developers and contributors from any claim, liability, loss, or damage arising from your use of the platform, including but not to violations of these terms, copyright infringement, or misuse of content.
+
+10. Contact
+If you have legal questions, DMCA notices, or require clarification on any provision of this document, please first contact:
+seraphyl@orravyn.cloud
+
+Additional contacts:
+Sridhar Somisetti
+Email: sridharsomisettiwork@gmail.com
+
+Sairam Maruri
+Email: sairam.maruri@gmail.com
+
+Ram Charan Barma
+Email: ramcharanbarma99@gmail.com
+
+                    </pre>
+                </div>
+            </details>
+
+        </section>
+
+        <section id="faq">
+            <h2>Frequently Asked Questions (FAQ)</h2>
+            <details>
+                <summary>Who owns the research I upload?</summary>
+                <div class="document-content faq-answer">
+                    You do. Users retain full ownership and control of the content they upload. By uploading, you grant the platform a non-exclusive license simply to store, display, and distribute the content for academic purposes on the Research Portal.
+                </div>
+            </details>
+            <details>
+                <summary>Is my personal data sold for advertising?</summary>
+                <div class="document-content faq-answer">
+                    No, never. The platform is strictly non-commercial. No personal data is exploited for commercial gain or advertising.
+                </div>
+            </details>
+            <details>
+                <summary>Can I delete my account and data?</summary>
+                <div class="document-content faq-answer">
+                    Yes. You can request to delete your account, personal information, and any individual documents you have uploaded. Upon your request, the platform developers will proceed with the deletion of your data.
+                </div>
+            </details>
+            <details>
+                <summary>Can I use the platform for commercial purposes?</summary>
+                <div class="document-content faq-answer">
+                    No. The Research Portal and all of its content are intended solely for non-commercial academic use. Any use for profit, resale, or business activity is strictly prohibited.
+                </div>
+            </details>
+            <details>
+                <summary>Is my data shared with third parties?</summary>
+                <div class="document-content faq-answer">
+                    No. Your data is not shared with any third-party services without your explicit consent. The platform only uses essential third-party tools for infrastructure support and does not include any third-party trackers or advertising integrations.
+                </div>
+            </details>
+            <details>
+                <summary>What kind of content can I upload?</summary>
+                <div class="document-content faq-answer">
+                    You are responsible for uploading only content that you own or have the explicit legal right to share. The content must not violate copyright, contain malicious code, or misrepresent academic authorship.
+                </div>
+            </details>
+        </section>
+
+    </div>
+    
+    <footer>
+        <p>© 2025 Research Platform. Pioneering the future of academic research.</p>
+        <p>Developed as capstone by <a href="https://sridhar.orravyn.cloud" target="_blank">Sridhar Somisetti</a>, <a href="https://sairam.orravyn.cloud" target="_blank">Sai Rama Linga Reddy Maruri</a>, <a href="#" target="_blank">Ram Charan Barma</a></p>
+    </footer>
+
+</body>
+</html>

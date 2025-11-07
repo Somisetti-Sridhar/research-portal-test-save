@@ -9,3 +9,9 @@ media/papers/pdfs/*
 
 # Django
 *.log
+
+# ML/AI directories
+bart_finetune/
+langchain_chatbot/
+legal/
+

@@ -168,7 +168,7 @@
 <div id="chat-container">
     <div id="chat-window">
         </div>
-    
+        
     <form id="chat-form">
         <input type="text" id="chat-input" placeholder="Ask Yggdrasil anything..." autocomplete="off" required>
         <button type="submit" id="send-button">
@@ -185,76 +185,81 @@
 
 <script>
     document.addEventListener('DOMContentLoaded', () => {
-        const chatForm = document.getElementById('chat-form');
-        const chatInput = document.getElementById('chat-input');
-        const sendButton = document.getElementById('send-button');
-        const chatWindow = document.getElementById('chat-window');
+    const chatForm = document.getElementById('chat-form');
+    const chatInput = document.getElementById('chat-input');
+    const sendButton = document.getElementById('send-button');
+    const chatWindow = document.getElementById('chat-window');
+    const Url = "https://n8n.orravyn.cloud/webhook/844779dc-4f69-4879-a7dc-99ed4e4527d7";
 
-        // --- IMPORTANT: YOUR N8N WEBHOOK URL ---
-        const n8nWebhookUrl = "https://n8n.orravyn.cloud/webhook/bcab4473-d49c-4c63-b32d-9d08d9a9acd8"; 
+    const urls_chat = typeof langchain_chatbots !== "undefined" ? langchain_chatbots : null;
+
+    addMessage('Hello! I am Yggdrasil, your research assistant. How can I help you today? 🌳', 'bot');
+
+    chatForm.addEventListener('submit', async (event) => {
+        event.preventDefault();
+        const userMessage = chatInput.value.trim();
         
-        addMessage('Hello! I am Yggdrasil, your research assistant. How can I help you today? 🌳', 'bot');
+        if (!userMessage) return;
 
-        chatForm.addEventListener('submit', async (event) => {
-            event.preventDefault();
-            const userMessage = chatInput.value.trim();
-            if (!userMessage) return;
+        addMessage(userMessage, 'user');
+        chatInput.value = '';
+        toggleForm(false);
+        const typingIndicator = showTypingIndicator();
 
-            addMessage(userMessage, 'user');
-            chatInput.value = '';
-            toggleForm(false);
-            const typingIndicator = showTypingIndicator();
-
-            try {
-                const response = await fetch(n8nWebhookUrl, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ message: userMessage }),
-                });
-
-                if (!response.ok) {
-                    throw new Error(`Server responded with status: ${response.status}`);
-                }
-
-                const data = await response.json();
-                const botResponse = data.reply || 'Sorry, I encountered an issue and could not get a response.';
-
-                typingIndicator.remove();
-                addMessage(botResponse, 'bot');
-
-            } catch (error) {
-                console.error('Error contacting n8n webhook:', error);
-                typingIndicator.remove();
-                addMessage('I seem to be having trouble connecting. Please try again later.', 'bot');
-            } finally {
-                toggleForm(true);
-            }
+        try {
+        const response = await fetch(Url, {
+            method: 'POST',
+            headers: {
+            'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+            message: userMessage
+            }),
         });
 
-        function addMessage(text, type) {
-            const messageElement = document.createElement('div');
-            messageElement.classList.add('message', `${type}-message`);
-            messageElement.textContent = text;
-            chatWindow.appendChild(messageElement);
-            chatWindow.scrollTop = chatWindow.scrollHeight;
+        if (!response.ok) {
+            throw new Error(`Server responded with status: ${response.status}`);
         }
-        
-        function showTypingIndicator() {
-            const indicator = document.createElement('div');
-            indicator.classList.add('message', 'bot-message', 'typing-indicator');
-            indicator.innerHTML = '<span></span><span></span><span></span>';
-            chatWindow.appendChild(indicator);
-            chatWindow.scrollTop = chatWindow.scrollHeight;
-            return indicator;
+
+        const data = await response.json();
+        const botResponse = data.reply || 'Sorry, I encountered an issue and could not get a response.';
+
+        typingIndicator.remove();
+        addMessage(botResponse, 'bot');
+
+        } catch (error) {
+        console.error('Error contacting n8n webhook:', error);
+        typingIndicator.remove();
+        addMessage('I seem to be having trouble connecting. Please try again later.', 'bot');
+        } finally {
+        toggleForm(true);
         }
-        
-        function toggleForm(isEnabled) {
-            chatInput.disabled = !isEnabled;
-            sendButton.disabled = !isEnabled;
-            if(isEnabled) {
-                chatInput.focus();
-            }
+    });
+
+    function addMessage(text, type) {
+        const messageElement = document.createElement('div');
+        messageElement.classList.add('message', `${type}-message`);
+        messageElement.textContent = text;
+        chatWindow.appendChild(messageElement);
+        chatWindow.scrollTop = chatWindow.scrollHeight;
+    }
+
+    function showTypingIndicator() {
+        const indicator = document.createElement('div');
+        indicator.classList.add('message', 'bot-message', 'typing-indicator');
+        indicator.innerHTML = '<span></span><span></span><span></span>';
+        chatWindow.appendChild(indicator);
+        chatWindow.scrollTop = chatWindow.scrollHeight;
+        return indicator;
+    }
+
+    function toggleForm(isEnabled) {
+        chatInput.disabled = !isEnabled;
+        sendButton.disabled = !isEnabled;
+        if (isEnabled) {
+        chatInput.focus();
         }
+    }
     });
 </script>
 {% endblock %}

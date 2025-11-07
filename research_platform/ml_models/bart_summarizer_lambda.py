@@ -23,25 +23,25 @@ def summarize_text(text, max_words_per_chunk=400):
     
     
 def summarize_text_from_pdf(pdf_file, max_words_per_chunk=400):
-    from apps.papers.utils import extract_text_from_pdf
-    text = extract_text_from_pdf(pdf_file)
-    
-    if not text.strip():
-        return "No text could be extracted from the PDF."
-    
-    payload = {"text": text, "max_words_per_chunk": max_words_per_chunk}
-    headers = {"Content-Type": "application/json"}
-    
+    webhook_url = "https://n8n.orravyn.cloud/webhook/05c364cf-2cdb-4675-8bd0-0993aba6d70f"
+
     try:
-        response = requests.post(API_URL, headers=headers, data=json.dumps(payload))
+        files = {"file": ("document.pdf", pdf_file, "application/pdf")}
+        response = requests.post(webhook_url, files=files)
         response.raise_for_status()
-        data = response.json()
-        return data.get("summary", "")
+
+        return response.text.strip()
+    
     except requests.exceptions.RequestException as e:
-        print(f"Error calling Lambda API: {e}")
-        if e.response:
+        print(f"Error calling webhook: {e}")
+        if hasattr(e, "response") and e.response is not None:
             print(e.response.text)
         return "Error generating summary."
+    
+    except Exception as e:
+        print(f"Unexpected error: {e}")
+        return "Error processing PDF file."
+
 
 if __name__ == "__main__":
     TEXT = """

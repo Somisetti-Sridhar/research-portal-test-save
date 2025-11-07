@@ -98,24 +98,6 @@ class PaperDetailView(DetailView):
         return context
 
 
-class PaperUploadView(LoginRequiredMixin, CreateView):
-    model = Paper
-    form_class = PaperUploadForm
-    template_name = 'papers/upload.html'
-    success_url = reverse_lazy('papers:my_papers')
-    
-    def dispatch(self, request, *args, **kwargs):
-        if request.user.user_type not in ['publisher', 'moderator', 'admin']:
-            messages.error(request, 'You do not have permission to upload papers.')
-            return redirect('papers:list')
-        return super().dispatch(request, *args, **kwargs)
-    
-    def form_valid(self, form):
-        form.instance.uploaded_by = self.request.user
-        if self.request.user.user_type in ['moderator', 'admin']:
-            form.instance.is_approved = True
-        messages.success(self.request, 'Paper uploaded successfully!')
-        return super().form_valid(form)
 
 class PaperEditView(LoginRequiredMixin, UpdateView):
     model = Paper
@@ -186,7 +168,8 @@ class PendingApprovalView(LoginRequiredMixin, ListView):
         return super().dispatch(request, *args, **kwargs)
     
     def get_queryset(self):
-        return Paper.objects.filter(is_approved=False).order_by('-created_at')
+        queryset = Paper.objects.filter(is_approved=False).select_related('uploaded_by').prefetch_related('categories').order_by('-created_at')
+        return queryset
 
 @login_required
 def bookmark_paper(request, pk):
@@ -374,21 +357,63 @@ class RatingListCreateView(generics.ListCreateAPIView):
                        status=status.HTTP_501_NOT_IMPLEMENTED)
 
 @login_required
-def download_paper(request, pk):
-    # Only allow downloading approved papers
-    paper = get_object_or_404(Paper, pk=pk, is_approved=True)
+def view_paper_pdf(request, pk):
+    """View PDF in browser - works for both approved papers and pending papers for moderators"""
+    paper = get_object_or_404(Paper, pk=pk)
     
-    # Increment download count
-    Paper.objects.filter(id=paper.id).update(download_count=paper.download_count + 1)
+    # Permission check: Allow if paper is approved OR user is moderator/admin
+    if not paper.is_approved:
+        if request.user.user_type not in ['moderator', 'admin']:
+            messages.error(request, 'You do not have permission to view this paper.')
+            return redirect('papers:list')
     
     # Check if PDF file exists
     if paper.pdf_path and paper.pdf_path.name:
         try:
-            response = HttpResponse(paper.pdf_path.read(), content_type='application/pdf')
-            response['Content-Disposition'] = f'attachment; filename="{paper.title}.pdf"'
+            # Open and serve the PDF file
+            pdf_file = paper.pdf_path.open('rb')
+            response = HttpResponse(pdf_file.read(), content_type='application/pdf')
+            response['Content-Disposition'] = f'inline; filename="{paper.title}.pdf"'
+            pdf_file.close()
             return response
         except FileNotFoundError:
-            messages.error(request, 'PDF file not found.')
+            messages.error(request, 'PDF file not found on server.')
+            return redirect('papers:detail', pk=pk)
+        except Exception as e:
+            messages.error(request, f'Error loading PDF: {str(e)}')
+            return redirect('papers:detail', pk=pk)
+    else:
+        messages.error(request, 'No PDF file available for this paper.')
+        return redirect('papers:detail', pk=pk)
+
+@login_required
+def download_paper(request, pk):
+    """Download PDF as attachment - only for approved papers"""
+    paper = get_object_or_404(Paper, pk=pk)
+    
+    # Permission check: Allow if paper is approved OR user is moderator/admin
+    if not paper.is_approved:
+        if request.user.user_type not in ['moderator', 'admin']:
+            messages.error(request, 'You do not have permission to download this paper.')
+            return redirect('papers:list')
+    
+    # Increment download count only for approved papers
+    if paper.is_approved:
+        Paper.objects.filter(id=paper.id).update(download_count=paper.download_count + 1)
+    
+    # Check if PDF file exists
+    if paper.pdf_path and paper.pdf_path.name:
+        try:
+            pdf_file = paper.pdf_path.open('rb')
+            response = HttpResponse(pdf_file.read(), content_type='application/pdf')
+            response['Content-Disposition'] = f'attachment; filename="{paper.title}.pdf"'
+            pdf_file.close()
+            return response
+        except FileNotFoundError:
+            messages.error(request, 'PDF file not found on server.')
+            return redirect('papers:detail', pk=pk)
+        except Exception as e:
+            messages.error(request, f'Error downloading PDF: {str(e)}')
             return redirect('papers:detail', pk=pk)
     else:
         messages.error(request, 'No PDF file available for this paper.')
@@ -416,15 +441,20 @@ class PaperUploadView(LoginRequiredMixin, CreateView):
         # approve only if uploader is moderator or admin
         paper.is_approved = self.request.user.user_type in ["moderator", "admin"]
 
-        paper.save()         # first and only save
-        form.save_m2m()      # add M2M categories after instance exists
+        paper.save()
+        form.save_m2m()
 
-        messages.success(
-            self.request,
-            "Paper uploaded successfully!"
-            + ("" if paper.is_approved else "  It will be visible after moderator approval.")
-        )
-        return super().form_valid(form)
+        approval_msg = "" if paper.is_approved else " It will be visible after moderator approval."
+        messages.success(self.request, f"Paper uploaded successfully!{approval_msg}")
+        
+        return redirect(self.success_url)
+    
+    def form_invalid(self, form):
+        messages.error(self.request, "There was an error uploading your paper. Please check the form and try again.")
+        for field, errors in form.errors.items():
+            for error in errors:
+                messages.error(self.request, f"{field}: {error}")
+        return super().form_invalid(form)
 
 
 # new feature --permission for admin to delete papers

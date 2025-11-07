@@ -18,9 +18,14 @@ def home_view(request):
         'popular_categories': popular_categories,
     })
 
+def info_view(request):
+    """Info page with legal and project information"""
+    return render(request, 'info.html')
+
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('', home_view, name='home'),
+    path('info/', info_view, name='info'),
     path('api/', include('apps.api.urls')),
     path('accounts/', include('apps.accounts.urls')),
     path('papers/', include('apps.papers.urls')),

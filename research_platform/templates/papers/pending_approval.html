@@ -57,7 +57,7 @@
                                     </a>
                                     
                                     {% if paper.pdf_path %}
-                                        <a href="{{ paper.pdf_path.url }}" target="_blank" class="btn btn-outline-info">
+                                        <a href="{% url 'papers:view_pdf' paper.pk %}" target="_blank" class="btn btn-outline-info">
                                             <i class="fas fa-file-pdf"></i> View PDF
                                         </a>
                                     {% endif %}

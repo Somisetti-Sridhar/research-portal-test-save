@@ -16,7 +16,7 @@ class PaperUploadForm(forms.ModelForm):
             'abstract': forms.Textarea(attrs={'class': 'form-control', 'rows': 5}),
             'authors': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Comma-separated author names'}),
             'publication_date': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
-            'doi': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Optional DOI'}),
+            'doi': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'DOI (Optional)'}),
             'pdf_path': forms.FileInput(attrs={'class': 'form-control'}),
         }
 

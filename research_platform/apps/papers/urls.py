@@ -11,6 +11,7 @@ urlpatterns = [
     path('<int:pk>/delete/', views.PaperDeleteView.as_view(), name='delete'),
     path('<int:pk>/bookmark/', views.bookmark_paper, name='bookmark'),
     path('<int:pk>/rate/', views.rate_paper, name='rate'),
+    path('<int:pk>/view-pdf/', views.view_paper_pdf, name='view_pdf'),
     path('<int:pk>/download/', views.download_paper, name='download'),
     path('bookmarks/', views.BookmarkListView.as_view(), name='bookmarks'),
     path('my-papers/', views.MyPapersView.as_view(), name='my_papers'),
