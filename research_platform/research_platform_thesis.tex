@@ -1,0 +1,463 @@
+\documentclass[12pt,a4paper]{report}
+\usepackage[margin=1in]{geometry}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{lmodern}
+\usepackage{setspace}
+\usepackage{hyperref}
+\usepackage{graphicx}
+\usepackage{longtable}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{enumitem}
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage{caption}
+\usepackage{titlesec}
+\usepackage{amsmath}
+
+\hypersetup{
+  colorlinks=true,
+  linkcolor=blue,
+  citecolor=blue,
+  urlcolor=blue
+}
+
+\definecolor{codebg}{RGB}{248,248,248}
+\lstset{
+  basicstyle=\ttfamily\small,
+  backgroundcolor=\color{codebg},
+  frame=single,
+  breaklines=true,
+  columns=fullflexible,
+  keepspaces=true,
+  showstringspaces=false
+}
+
+\onehalfspacing
+
+\title{Research Platform: System Design, Implementation, and Evaluation}
+\author{Project Thesis}
+\date{\today}
+
+\begin{document}
+\maketitle
+\pagenumbering{roman}
+\tableofcontents
+\listoffigures
+\listoftables
+\clearpage
+\pagenumbering{arabic}
+
+\chapter*{Abstract}
+\addcontentsline{toc}{chapter}{Abstract}
+This document presents a comprehensive description of an academic research platform implemented using Django. The platform consolidates user management, paper ingestion and moderation, search, social grouping, real-time discussion, and a lightweight machine learning recommendation pipeline. The thesis details concrete features as implemented in the repository, including data models, views, templates, and utilities across the \texttt{accounts}, \texttt{papers}, \texttt{groups}, \texttt{chat}, \texttt{search}, and \texttt{ml\_engine} apps. We explain the system architecture, database schema, access control, request flows, template-level interactions, and the recommendation engine that records per-user recommendations. Where appropriate, we cite exact application code behavior as the basis for the description.\par
+
+\textbf{Keywords:} Django, Research Platform, Recommendation, Real-time Chat, Groups, Papers, Moderation, Search.
+
+\chapter{Introduction}
+\section{Purpose and Scope}
+The platform enables researchers to register, authenticate, upload and manage scholarly papers, bookmark and rate content, organize into groups, and discuss papers via contextual chat rooms. A recommendation engine computes and stores user-specific recommendations. This thesis documents what is concretely implemented in the codebase, focusing on features observable in the models, views, URLs, and templates delivered in the repository.\par
+
+\section{Technology Stack}
+The backend is built with Django and Django REST Framework (DRF) components where used. Real-time features are prepared via Django Channels configuration, with in-memory layer enabled by default in settings. The ML component uses \texttt{sentence-transformers} (\texttt{all-MiniLM-L6-v2}) for content embeddings. Templates are standard Django templates. The default database configuration in the repository targets SQLite for development; optional MySQL configuration is present in comments and can be activated by environment variables or settings adjustments.
+
+\section{Structure of This Thesis}
+This thesis is structured to mirror the code organization: we first present the system architecture, then deep-dive into each app (\texttt{accounts}, \texttt{papers}, \texttt{groups}, \texttt{chat}, \texttt{search}, and \texttt{ml\_engine}), followed by cross-cutting concerns (authentication, permissions, logging, background tasks), deployment notes, and evaluation considerations rooted in the implemented functionality.
+
+\section{Requirements and Constraints}
+Grounded in the repository's concrete behavior, the following requirements and constraints are evidenced:
+\begin{itemize}[leftmargin=*,noitemsep]
+  \item \textbf{Functional}: account registration and session login; profile management; paper CRUD with moderation; search and filtering; grouping and membership; contextual chat; generation and display of recommendations.
+  \item \textbf{Data}: normalized relations across users, papers, categories, groups, chats, and recommendations; file storage for PDFs and avatars.
+  \item \textbf{Access Control}: role-based branching in views using the \texttt{user\_type} field, enforced for upload, moderation, admin dashboards, and group management.
+  \item \textbf{Non-functional}: use of pagination across list views; logging to file/console; in-memory channels layer for dev; SQLite default configuration.
+  \item \textbf{Operational}: Celery/Redis knobs present; ML model weights loaded at runtime for embeddings; templates present for end-to-end interactions.
+\end{itemize}
+
+\section{Assumptions Evident in Code}
+Only minimal assumptions are implicit: authors stored as text (implying free-form or JSON-encoded list), DOI optional; recommendations computed offline or on demand; chat offensive-content filtering delegated to a utility function.
+
+\chapter{System Architecture}
+\section{High-Level Design}
+The platform follows a modular monolith architecture with distinct Django apps:
+\begin{itemize}[leftmargin=*,noitemsep]
+  \item \textbf{accounts}: Custom user model, user profiles, dashboards, and admin dashboard.
+  \item \textbf{papers}: Core scholarly paper entities, categories, bookmarks, ratings, citations, progress, and views. Includes moderation workflow.
+  \item \textbf{groups}: Social groups with membership roles and attachment of papers to groups.
+  \item \textbf{chat}: Contextual chat rooms bound to papers or groups; includes a rule-based helper bot and basic offensive content filtering hook.
+  \item \textbf{search}: Full-page search views, advanced search UI, and persisted per-user search history.
+  \item \textbf{ml\_engine}: Data models for recommendations, embeddings, and an improved hybrid recommendation engine implementation.
+\end{itemize}
+
+\section{Runtime Components}
+\begin{itemize}[leftmargin=*,noitemsep]
+  \item \textbf{Web App}: Django WSGI/ASGI application as defined in \texttt{research\_platform/wsgi.py} and \texttt{asgi.py}.
+  \item \textbf{Templates}: HTML templates render list/detail pages for accounts, papers, groups, and chat.
+  \item \textbf{Channels Layer}: Configured to use an in-memory backend by default for development.
+  \item \textbf{ML Inference}: The recommendation engine computes sentence embeddings and writes results to relational tables.
+\end{itemize}
+
+\section{Persistence}
+The codebase ships with SQLite enabled by default in \texttt{settings.py}. Schema is managed by Django migrations present in each app. The models reflect normalized relational design linking users, papers, categories, groups, and conversational entities.
+
+\section{Component Interaction Overview}
+We describe typical flows grounded in the view implementations:
+\begin{enumerate}[leftmargin=*,noitemsep]
+  \item \textbf{Upload Flow}: authenticated publisher/moderator/admin opens upload form; upon submit, instance is assigned to \texttt{uploaded\_by}; \texttt{is\_approved} set automatically for moderator/admin; categories M2M saved; redirect to "My Papers".
+  \item \textbf{Moderation Flow}: moderator/admin accesses pending list; approve toggles flag and persists; reject deletes instance with message feedback.
+  \item \textbf{Detail Viewing}: authenticated user hits detail; if no \texttt{PaperView} exists, one is created and the \texttt{view\_count} is incremented via F-expression.
+  \item \textbf{Bookmark/Rate}: POST toggles bookmark or creates/updates rating; feedback via messages; redirect to detail.
+  \item \textbf{Search}: GET parameters filtered across fields; when authenticated, query persistence to \texttt{SearchHistory} occurs.
+  \item \textbf{Groups}: creator becomes admin on creation; membership management via dedicated endpoints to join/leave/invite/remove/update roles.
+  \item \textbf{Chat}: room gets created lazily for paper/group; offensive messages blocked; optional bot replies injected when prefixed with \texttt{@bot}.
+  \item \textbf{Recommendations}: background engine populates \texttt{UserRecommendation}; dashboards and pages read from this table.
+\end{enumerate}
+
+\chapter{Accounts App}
+\section{Data Model}
+\subsection{User}
+The custom \texttt{User} model extends \texttt{AbstractUser} with the following concrete fields and behaviors:
+\begin{itemize}[leftmargin=*,noitemsep]
+  \item \texttt{user\_type} with choices: admin, moderator, publisher, reader (default reader)
+  \item Unique \texttt{email} used as \texttt{USERNAME\_FIELD}
+  \item \texttt{is\_verified}, \texttt{created\_at}, and \texttt{updated\_at}
+  \item \texttt{REQUIRED\_FIELDS = [\texttt{username}]} and \texttt{db\_table = users}
+\end{itemize}
+
+\subsection{UserProfile}
+One-to-one extension of \texttt{User} storing personal metadata: first name, last name, institution, research interests, bio, and optional avatar path (\texttt{upload\_to=avatars/}).
+
+\subsection{SearchHistory}
+Records user queries with timestamps, ordered descending by time.
+
+\section{Views and Behavior}
+\subsection{Authentication and Session}
+\begin{itemize}[leftmargin=*,noitemsep]
+  \item \textbf{LoginView}: Email/password authentication via \texttt{authenticate} using email as username, success/failure messages, redirect to dashboard.
+  \item \textbf{RegisterView}: Creates \texttt{User} and associated \texttt{UserProfile}; success redirect to login.
+  \item \textbf{LogoutView}: Ends session and redirects home.
+\end{itemize}
+
+\subsection{User-facing Pages}
+\begin{itemize}[leftmargin=*,noitemsep]
+  \item \textbf{ProfileView}: Shows profile and aggregates counts for uploaded papers, bookmarks, ratings, and group memberships.
+  \item \textbf{ProfileEditView}: Edit profile using \texttt{UpdateView}.
+  \item \textbf{DashboardView}: Displays recent activity and recommendations sourced from \texttt{ml\_engine.UserRecommendation} if present.
+  \item \textbf{AdminDashboardView}: Restricted to admin users; shows pending papers, recent submissions, and global counts.
+\end{itemize}
+
+\section{Permissions Model}
+User roles (admin, moderator, publisher, reader) drive conditional logic within views (e.g., moderation, upload auto-approval) and are referenced across apps (notably in papers and admin views).
+
+\section{URLs, Templates, and Navigation}
+While specific URL patterns are defined per app, the templates under \texttt{templates/accounts/} align with the views described: \texttt{login.html}, \texttt{register.html}, \texttt{profile.html}, \texttt{profile\_edit.html}, \texttt{dashboard.html}, and \texttt{admin\_dashboard.html}. Navigation leverages Django messages for feedback and redirects consistent with success URLs in views.
+
+\chapter{Papers App}
+\section{Data Model}
+\subsection{Category}
+Unique categories with free-text description; \texttt{verbose\_name\_plural} set to “Categories”.
+
+\subsection{Paper}
+Core entity with title, abstract, authors (stored as text; JSON-encoded string by convention), publication date, optional unique DOI, optional PDF path, uploader, categories (through model), created/updated timestamps, moderation flag \texttt{is\_approved}, counters for downloads and views, and optional summary.
+
+Derived properties:
+\begin{itemize}[leftmargin=*,noitemsep]
+  \item \texttt{average\_rating}: arithmetic mean over related ratings
+  \item \texttt{citation\_count}: count of incoming citations via \texttt{cited\_by}
+\end{itemize}
+
+\subsection{Associative and Activity Models}
+\begin{itemize}[leftmargin=*,noitemsep]
+  \item \textbf{PaperCategory}: many-to-many bridge (unique per paper/category pair)
+  \item \textbf{Bookmark}: per-user bookmarks with folder names (unique per user/paper)
+  \item \textbf{Citation}: directed relationship between papers (unique per ordered pair)
+  \item \textbf{Rating}: 1--5 integer ratings with optional review text (unique per user/paper)
+  \item \textbf{ReadingProgress}: progress tracking per user/paper (percentage, last page, completed)
+  \item \textbf{PaperView}: one-time per-user view registration used to increment \texttt{view\_count}
+\end{itemize}
+
+\section{Views and Interactions}
+\subsection{Listings and Detail}
+\begin{itemize}[leftmargin=*,noitemsep]
+  \item \textbf{PaperListView}: Filtering by search, category, and sorting by recency, popularity, rating, or citation counts; paginated.
+  \item \textbf{PaperDetailView}: Access control by role; increments view count once per authenticated user via \texttt{PaperView}; exposes ratings, citations, and user bookmark/rating in context.
+\end{itemize}
+
+\subsection{Creation and Moderation}
+\begin{itemize}[leftmargin=*,noitemsep]
+  \item \textbf{PaperUploadView}: Restricted to publisher/moderator/admin; auto-approves when uploader is moderator/admin; saves many-to-many categories; success messaging.
+  \item \textbf{PendingApprovalView}: Moderator/admin access to pending papers.
+  \item \textbf{Approve/Reject}: Explicit approve action toggles \texttt{is\_approved}; reject deletes the paper with appropriate messaging.
+\end{itemize}
+
+\subsection{Engagement}
+\begin{itemize}[leftmargin=*,noitemsep]
+  \item \textbf{Bookmark}: Toggle bookmark on detail.
+  \item \textbf{Rate}: Create/update rating via form.
+  \item \textbf{Download}: Serves PDF for approved papers and increments \texttt{download\_count} with file existence checks and error handling.
+  \item \textbf{AdminPaperListView}: Admin-only listing with search across title, abstract, authors.
+  \item \textbf{PaperSummaryView}: Role-conditioned access to a summary template.
+\end{itemize}
+
+\subsection{API-style Endpoints (DRF Views)}
+The code includes list-only implementations returning JSON for papers, bookmarks, and ratings to authenticated users (create methods return \texttt{501 Not Implemented}). These are building blocks for a REST API but are intentionally scoped to listing in the current code.
+
+\section{Data Integrity and Constraints}
+\begin{itemize}[leftmargin=*,noitemsep]
+  \item Uniqueness constraints exist on DOI (optional) and composite keys for M2M bridges and per-user actions (bookmark, rating, paper view).
+  \item Counters (\texttt{view\_count}, \texttt{download\_count}) are updated atomically using ORM updates.
+  \item Ordering defaults prioritize recency for papers and search history.
+\end{itemize}
+
+\chapter{Groups App}
+\section{Data Model}
+\begin{itemize}[leftmargin=*,noitemsep]
+  \item \textbf{Group}: name, description, creator, created\_at, and privacy flag.
+  \item \textbf{GroupMember}: membership with roles (admin, moderator, member); unique per group/user.
+  \item \textbf{GroupPaper}: attachment of approved papers to groups with \texttt{added\_by} and timestamp; unique per group/paper.
+\end{itemize}
+
+\section{Views and Interactions}
+\begin{itemize}[leftmargin=*,noitemsep]
+  \item \textbf{GroupListView}: Public groups listing.
+  \item \textbf{GroupDetailView}: Shows members and papers; contextual UI for member state and user’s approved papers.
+  \item \textbf{GroupCreateView}: Creates group and adds creator as admin.
+  \item \textbf{GroupEditView}: Creator-only edits.
+  \item \textbf{MyGroupsView}: Lists memberships for the requesting user.
+  \item \textbf{Join/Leave}: Membership management with error handling for private groups and duplicate membership.
+  \item \textbf{Add Paper}: Members can attach approved papers; duplicates prevented.
+  \item \textbf{Invite/Remove/Update Role}: Admin/moderator capabilities to manage membership and roles; safeguards around creator removal.
+  \item \textbf{GroupMembersView}: Detailed member roster with manage flags for template logic.
+\end{itemize}
+
+\chapter{Chat App}
+\section{Data Model}
+\begin{itemize}[leftmargin=*,noitemsep]
+  \item \textbf{ChatRoom}: Anchored to a paper or a group; created\_by, created\_at, active flag.
+  \item \textbf{ChatMessage}: Linked to a room, optional user (\emph{None} denotes bot), message text, timestamp, and bot flag.
+\end{itemize}
+
+\section{Views and Bot Behavior}
+\begin{itemize}[leftmargin=*,noitemsep]
+  \item \textbf{ChatRoomView}: For a paper; creates or retrieves room; returns last messages and supports AJAX posting. Messages are screened via an \texttt{is\_offensive} utility before persistence. \emph{Bot replies} are generated for messages starting with \texttt{@bot}, answering about abstract, authors, publication date, and categories based on the bound paper.
+  \item \textbf{ChatDetailView}: Full room transcript view.
+  \item \textbf{MyChatRoomsView}: Rooms created by the user or where the user has posted.
+  \item \textbf{GroupChatRoomView}: Same workflow scoped to a group context with the same safety check.
+  \item \textbf{AJAX Endpoint}: \texttt{send\_message\_ajax} returns structured JSON and optional bot response for paper rooms.
+  \item \textbf{Yggdrasil Chatbot View}: A dedicated template hook for a standalone chatbot page.
+\end{itemize}
+
+\section{Chatbot Utility}
+An additional class in \texttt{ml\_engine/chatbot.py} encapsulates similar rule-based responses for reuse.
+
+\section{Channels and Real-time Considerations}
+The project configures an in-memory channels layer in settings for development. With existing \texttt{consumers.py} and \texttt{routing.py} under the chat app, the system can deliver WebSocket-backed features when deployed under ASGI. For production, a Redis channel layer is typical; the codebase includes Redis settings placeholders for task queues and can be extended for channels as needed.
+
+\chapter{Search App}
+\section{Views}
+\begin{itemize}[leftmargin=*,noitemsep]
+  \item \textbf{SearchView}: Keyword search over title, abstract, and authors with filters for category, author, and publication year ranges. Authenticated queries are persisted into \texttt{SearchHistory}.
+  \item \textbf{AdvancedSearchView}: Supplies categories for the advanced UI.
+  \item \textbf{SearchHistoryView}: Lists user-specific search history.
+  \item \textbf{search\_suggestions}: Lightweight suggestions from titles.
+\end{itemize}
+
+\chapter{Machine Learning Engine}
+\section{Data Model}
+\begin{itemize}[leftmargin=*,noitemsep]
+  \item \textbf{UserRecommendation}: per-user recommended paper with score, reason, and timestamp (unique per user/paper).
+  \item \textbf{RecommendationModel}: registry for model metadata and activation flag.
+  \item \textbf{PaperEmbedding}: one-to-one per paper storing vector embeddings and model version.
+\end{itemize}
+
+\section{Improved Hybrid Recommendation Engine}
+The implementation in \texttt{ml\_engine/recommendation\_engine.py} computes sentence embeddings using \texttt{all-MiniLM-L6-v2}, builds content embeddings for approved papers, and combines three signals: content similarity, collaborative co-preference (via ratings), and popularity (based on citation and download counts). Scores are normalized, ranked, and written to \texttt{UserRecommendation}. The pipeline methods provided are:
+\begin{itemize}[leftmargin=*,noitemsep]
+  \item \texttt{build\_embeddings()} — encodes paper text to vectors and stores in \texttt{PaperEmbedding}.
+  \item \texttt{get\_user\_profile\_vector(user)} — averages embeddings of highly rated and bookmarked papers.
+  \item \texttt{content\_based\_recommend(user)} — returns top-$k$ papers by cosine similarity.
+  \item \texttt{collaborative\_filter(user)} — mines co-ratings to propose candidate papers.
+  \item \texttt{hybrid\_recommend(user, top\_k, \dots)} — fuses content, collaborative, and popularity with weights.
+  \item \texttt{save\_recommendations(user, ranked)} — persists results with a human-readable reason.
+\end{itemize}
+
+\section{Integration Points}
+Recommendations are surfaced in the accounts dashboard and a dedicated papers recommendation view. The code reads from \texttt{UserRecommendation}; separate scheduling of \texttt{build\_embeddings} and generation is implied and can be triggered via a periodic task runner (Celery scaffolding exists in the project, with Redis configuration hooks in settings).
+
+\section{Algorithmic and Storage Details}
+\begin{itemize}[leftmargin=*,noitemsep]
+  \item \textbf{Text Representation}: For each approved paper, a concatenation of title, summary (if present), and abstract is encoded with \texttt{all-MiniLM-L6-v2} into a dense vector.
+  \item \textbf{User Profile Vector}: Averaged embedding over a user's highly rated and bookmarked papers; missing vectors yield popularity fallback.
+  \item \textbf{Similarity}: Cosine similarity computed between user vector and paper embeddings; candidates ranked descending.
+  \item \textbf{Collaborative Signal}: Co-rating frequency (ratings \(\geq 4\)) across users identifies candidate papers; scores reflect count aggregation.
+  \item \textbf{Popularity}: Weighted combination of citation counts and download counts consumed when available via properties.
+  \item \textbf{Normalization}: Min–max normalization across combined scores to stabilize fusion.
+  \item \textbf{Persistence}: Embeddings stored as JSON arrays and recommendations recorded per user with a human-readable reason string.
+\end{itemize}
+
+\section{Operational Concerns for the ML Pipeline}
+Model initialization incurs a cold-start cost; the code is structured so embeddings can be built in batch, with subsequent generation running more cheaply. Embedding dimensions and storage size scale linearly with paper count; periodic rebuilds are recommended after content updates.
+
+\chapter{Templates and User Experience}
+The templates under \texttt{templates/} implement list/detail pages, CRUD forms, and dashboard-like summaries. Notable templates include: accounts pages (login, register, profile, dashboard, admin dashboard), paper views (list, detail, my papers, admin list, moderation queues, bookmarks, categories, summary), group views (list, detail, create, edit, members, my groups), and chat rooms (paper and group contexts). Pagination, flash messages, and form handling are present throughout.
+
+\chapter{Cross-Cutting Concerns}
+\section{Authentication and Authorization}
+Authentication uses Django sessions. Authorization leverages the custom \texttt{user\_type} field with explicit checks in views. DRF-provided authentication classes are configured in settings for API-style endpoints, including JWT and session authentication.
+
+\section{Logging}
+Settings configure file and console logging, writing to \texttt{logs/django.log} with a created logs directory on startup.
+
+\section{Channels Configuration}
+An in-memory channel layer is configured for development. WebSocket consumers exist under \texttt{apps/chat/consumers.py} and routing under \texttt{apps/chat/routing.py} to enable real-time messaging when deployed with ASGI.
+
+\section{Storage and Media}
+PDFs for papers are stored via \texttt{FileField} under \texttt{media/papers/pdfs}. User avatars are stored under \texttt{media/avatars}.
+
+\section{Background Processing}
+Celery and Redis configuration keys are present to enable task offloading. The \texttt{ml\_engine/run\_periodically.py} and \texttt{tasks.py} can be used to schedule recommendation updates; the exact schedules are environment-dependent.
+
+\section{Security and Privacy}
+Grounded in the codebase, the following concerns are addressed or ready to be addressed:
+\begin{itemize}[leftmargin=*,noitemsep]
+  \item \textbf{Authentication}: Django session and JWT (via configuration) are enabled in settings for API endpoints; login-required decorators and mixins protect sensitive views.
+  \item \textbf{Authorization}: Role checks are explicit in views to gate moderation, administration, and group management actions.
+  \item \textbf{Input Handling}: Forms and ORM usage mitigate common injection vectors; file downloads are gated by approval state.
+  \item \textbf{Chat Safety}: Offensive content is filtered via a utility before persistence; bot messages are flagged and do not impersonate users.
+  \item \textbf{Privacy}: Search history is stored per-user and displayed only to the owner; profiles are editable by their owners.
+\end{itemize}
+
+\section{Accessibility and Internationalization}
+Templates are standard Django HTML with form labels and messages. While no i18n translations are included in the repository, the structure is compatible with Django’s translation framework and can be extended without invasive changes.
+
+\section{Scalability and Performance}
+\begin{itemize}[leftmargin=*,noitemsep]
+  \item \textbf{Database}: Unique constraints and selective indexing can be added on frequently filtered fields (e.g., \texttt{created\_at}, \texttt{is\_approved}, foreign keys).
+  \item \textbf{Query Efficiency}: Use of \texttt{select\_related} and \texttt{prefetch\_related} appears where appropriate in list/detail views to reduce query counts.
+  \item \textbf{Caching}: While not enabled in settings, the code is compatible with per-view caching and template fragment caching for lists and detail sidebars.
+  \item \textbf{Pagination}: All large listings are paginated to bound response sizes.
+  \item \textbf{ML}: Embedding precomputation avoids runtime encoding; cosine similarity over stored vectors scales with vector count.
+\end{itemize}
+
+\chapter{Evaluation of the Implemented System}
+\section{Functional Coverage}
+The repository demonstrates end-to-end flows: user onboarding, profile management, paper upload with moderation, search and discovery, social grouping and curation, contextual chat, and generation plus consumption of recommendations. Counters and metrics (views, downloads, ratings, citations) are explicitly modeled and used in ranking.
+
+\section{Non-Functional Properties}
+\begin{itemize}[leftmargin=*,noitemsep]
+  \item \textbf{Usability}: Template-driven pages and consistent pagination support straightforward navigation.
+  \item \textbf{Security}: Access controls are enforced at view level using role checks and login requirements. Offensive content filtering hooks exist for chat.
+  \item \textbf{Performance}: Sentence embedding model is compact and well-suited for moderate datasets; embeddings are persisted to avoid recomputation on every request.
+  \item \textbf{Extensibility}: Clear separation of concerns across apps, with DRF-compatible view patterns ready for full API exposure.
+\end{itemize}
+
+\section{Limitations and Known Trade-offs}
+This documentation limits itself to what is present in the codebase. API endpoints are read-only for certain resources. Authors are stored as free text; a normalized author entity is not implemented. The chat bot is rule-based; it does not use LLMs. Channels are configured with an in-memory layer by default. Production-ready database and cache settings require environment tuning.
+
+\section{Testing Strategy and Quality}
+Grounded in the views and models, suitable tests include: model constraint tests (uniques and M2M bridges), view access tests by role, upload/approval flows, pagination and sorting, bookmark/rating toggles, download gating (approved only), search filtering and history persistence, group membership operations, chat offensive filtering and bot reply insertion, and ML pipeline smoke tests for embedding and recommendation save paths.
+
+\chapter{Deployment and Configuration}
+\section{Settings Overview}
+\begin{itemize}[leftmargin=*,noitemsep]
+  \item \textbf{Installed Apps}: includes \texttt{rest\_framework}, \texttt{rest\_framework\_simplejwt}, \texttt{corsheaders}, \texttt{channels}, and \texttt{django\_filters}.
+  \item \textbf{Database}: SQLite by default, with commented MySQL configuration and environment variable hooks.
+  \item \textbf{Media/Static}: Media under \texttt{media/}; static served from \texttt{/static/} with \texttt{STATIC\_ROOT} configured.
+  \item \textbf{CORS}: Local development origins pre-configured.
+  \item \textbf{Logging}: File and console handlers with INFO level.
+\end{itemize}
+
+\section{Operational Notes}
+To surface recommendations, ensure the recommendation engine is executed periodically to refresh \texttt{PaperEmbedding} and \texttt{UserRecommendation}. Channels require an ASGI deployment (e.g., Daphne or Uvicorn) for WebSocket functionality at scale.
+
+\section{CI/CD, Backup, and Monitoring}
+While not included in the repository, the configuration lends itself to:
+\begin{itemize}[leftmargin=*,noitemsep]
+  \item \textbf{CI}: linting and unit tests on push; migrations check; static analysis.
+  \item \textbf{CD}: environment-variable driven settings enabling database and cache backends.
+  \item \textbf{Backup/DR}: periodic database dumps and media storage snapshots; embedding tables can be regenerated but still warrant backup.
+  \item \textbf{Monitoring}: log shipping of \texttt{logs/django.log}; request metrics and background job durations.
+\end{itemize}
+
+\chapter{Conclusion}
+The implemented platform provides a cohesive environment for managing scholarly content and researcher interactions, complete with moderation, engagement metrics, social organization, contextual chat, and a content-aware recommendation subsystem. The modular code structure and the explicit, typed models position the system well for iterative extension, including fuller REST APIs, more advanced ranking, and production-grade deployments.
+
+\appendix
+\chapter{Primary Data Models}
+\begin{longtable}{@{}p{0.22\linewidth}p{0.72\linewidth}@{}}
+\toprule
+\textbf{Model} & \textbf{Key Fields and Relations} \\
+\midrule
+User & email (unique), username, user\_type, timestamps \\
+UserProfile & one-to-one User; personal info and avatar \\
+SearchHistory & user, query, timestamp \\
+Category & name (unique), description \\
+Paper & title, abstract, authors, publication\_date, DOI (unique, optional), pdf\_path, uploaded\_by, categories M2M (through), counters, summary, moderation \\
+PaperCategory & paper, category (unique together) \\
+Bookmark & user, paper, folder (unique together user/paper) \\
+Citation & citing\_paper, cited\_paper (unique together) \\
+Rating & user, paper, rating 1--5, review\_text (unique together user/paper) \\
+ReadingProgress & user, paper, progress\_percentage, last\_page, completed \\
+PaperView & user, paper (unique together), viewed\_at \\
+Group & name, description, created\_by, created\_at, is\_private \\
+GroupMember & group, user, role (unique together) \\
+GroupPaper & group, paper, added\_by, added\_at (unique together) \\
+ChatRoom & paper or group, created\_by, created\_at, is\_active \\
+ChatMessage & room, optional user (None=bot), message, timestamp, is\_bot\_message \\
+UserRecommendation & user, paper, score, reason, created\_at (unique together user/paper) \\
+RecommendationModel & name, version, model\_path, is\_active, created\_at \\
+PaperEmbedding & one-to-one paper, embedding JSON array, model\_version, created\_at \\
+\bottomrule
+\end{longtable}
+
+\chapter{Key Views and Flows}
+\chapter{Data Dictionary}
+This appendix tabulates key fields based on the concrete model definitions.
+\begin{longtable}{@{}p{0.18\linewidth}p{0.18\linewidth}p{0.12\linewidth}p{0.44\linewidth}@{}}
+\toprule
+\textbf{Model} & \textbf{Field} & \textbf{Type} & \textbf{Notes} \\
+\midrule
+User & email & Email & unique, \texttt{USERNAME\_FIELD} \\
+User & user\_type & Char(20) & choices: admin/moderator/publisher/reader \\
+UserProfile & avatar & Image & uploads to \texttt{avatars/} \\
+Paper & doi & Char(100) & optional, unique \\
+Paper & pdf\_path & File & uploads to \texttt{papers/pdfs/} \\
+Paper & is\_approved & Boolean & moderation flag \\
+Rating & rating & Integer & 1..5 \\
+ReadingProgress & progress\_percentage & Float & 0..100 \\
+ChatMessage & is\_bot\_message & Boolean & distinguishes bot entries \\
+PaperEmbedding & embedding & JSON & numeric array \\
+UserRecommendation & score & Float & normalized hybrid score \\
+\bottomrule
+\end{longtable}
+
+\chapter{Permissions Matrix}
+\begin{longtable}{@{}p{0.25\linewidth}p{0.17\linewidth}p{0.17\linewidth}p{0.17\linewidth}p{0.17\linewidth}@{}}
+\toprule
+\textbf{Action} & \textbf{Reader} & \textbf{Publisher} & \textbf{Moderator} & \textbf{Admin} \\
+\midrule
+View approved papers & Yes & Yes & Yes & Yes \\
+Upload paper & No & Yes & Yes & Yes \\
+Auto-approve own uploads & No & No & Yes & Yes \\
+Moderation queue & No & No & Yes & Yes \\
+Admin paper list & No & No & No & Yes \\
+Create group & Yes & Yes & Yes & Yes \\
+Invite/remove/update roles in group & No & No & Yes (if group role) & Yes (if group role) \\
+Access dashboard & Yes & Yes & Yes & Yes \\
+Access admin dashboard & No & No & No & Yes \\
+\bottomrule
+\end{longtable}
+
+\begin{itemize}[leftmargin=*,noitemsep]
+  \item \textbf{Paper Upload}: form assigns \texttt{uploaded\_by}; auto-approves for moderator/admin; saves categories; success message; redirect.
+  \item \textbf{Paper Detail}: role-conditional queryset; view count increment via \texttt{PaperView}; related ratings and citations provided in context.
+  \item \textbf{Group Management}: create (creator becomes admin), join/leave, invite/remove/update role with permissions.
+  \item \textbf{Chat}: block offensive messages; bot answers metadata queries; AJAX endpoint returns structured JSON.
+  \item \textbf{Search}: persists search queries for authenticated users; filters by category/author/year.
+  \item \textbf{Recommendations}: engine builds embeddings and writes to \texttt{UserRecommendation}; dashboard reads and displays them.
+\end{itemize}
+
+\end{document}
+
+

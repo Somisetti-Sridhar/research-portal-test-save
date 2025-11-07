@@ -9,3 +9,5 @@ media/papers/pdfs/*
 
 # Django
 *.log
+
+research_platform/ieee_paper.tex
