@@ -3,6 +3,9 @@ __pycache__/
 *.py[cod]
 *.sqlite3
 
+# macOS
+.DS_Store
+
 # Virtual environment
 venv/
 media/papers/pdfs/*
