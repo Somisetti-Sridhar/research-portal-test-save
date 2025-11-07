@@ -9,6 +9,7 @@ channels-redis
 elasticsearch-dsl
 transformers
 torch
+sentence-transformers
 scikit-learn
 networkx
 PyPDF2
@@ -20,3 +21,4 @@ pandas
 numpy
 matplotlib
 seaborn
+tensorflow-keras
